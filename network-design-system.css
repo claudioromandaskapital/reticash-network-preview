@@ -203,11 +203,12 @@ body.dk .proto-banner{color:#fcd34d}
   z-index:60;
   transition:background var(--t) var(--ease),border-color var(--t) var(--ease);
 }
-.brand{font-weight:900;letter-spacing:-.05em;font-size:1.32rem;line-height:1;text-transform:uppercase;user-select:none;color:var(--ink)}
+.brand{flex-shrink:0;font-weight:900;letter-spacing:-.05em;font-size:1.32rem;line-height:1;text-transform:uppercase;user-select:none;color:var(--ink)}
 .brand em{font-style:normal;color:var(--red)}
 
 /* Role tag - cuadrado, identidad institucional (§3.16.7) */
 .role{
+  flex-shrink:0;
   font-size:.5rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
   color:var(--red);background:var(--red-bg);border:1px solid var(--red-brd);
   padding:3px 7px;border-radius:0;line-height:1;user-select:none;white-space:nowrap;
@@ -217,6 +218,7 @@ body.dk .proto-banner{color:#fcd34d}
 
 /* Tier chip (§3.16.7 - pill con nivel + medalla) */
 .lvl-chip{
+  flex-shrink:0;
   display:inline-flex;align-items:center;gap:5px;
   font-size:.55rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink2);background:var(--surf3);border:1px solid var(--brd2);
@@ -243,7 +245,7 @@ body.dk .proto-banner{color:#fcd34d}
 
 /* Campanita con badge */
 .rc-bell{
-  position:relative;background:transparent;border:0;padding:6px 8px;border-radius:8px;
+  flex-shrink:0;position:relative;background:transparent;border:0;padding:6px 8px;border-radius:8px;
   color:var(--ink3);cursor:pointer;
   transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease);
 }
@@ -257,6 +259,7 @@ body.dk .proto-banner{color:#fcd34d}
 
 /* Avatar con popover */
 .who-avatar{
+  flex-shrink:0;
   width:34px;height:34px;border-radius:50%;background:var(--surf3);color:var(--ink2);
   font-weight:800;font-size:.72rem;letter-spacing:.02em;
   display:flex;align-items:center;justify-content:center;border:1.5px solid var(--brd2);
@@ -284,13 +287,13 @@ body.dk .proto-banner{color:#fcd34d}
   width:var(--tap);height:var(--tap);
 }
 
-@media (max-width:480px){
-  /* En teléfono el header prioriza marca + nivel + campana + avatar.
-     El reloj es decorativo (mercado latiendo) y se oculta para que el
-     avatar no quede pegado/cayéndose del borde derecho. */
+@media (max-width:430px){
+  /* En teléfono el header prioriza marca + nivel + campana + avatar. El
+     chip de nivel colapsa a medalla-sola para no saturar. El reloj de
+     mercado (que Cajero/Admin sí usan, estilo CM) queda disponible en el
+     design system; el cliente simplemente no lo incluye. */
   .appbar{gap:8px}
-  .lvl-chip-name{display:none} /* medal-only en móvil para no saturar */
-  .clock{display:none}
+  .lvl-chip-name{display:none} /* medal-only en móvil */
 }
 @media (max-width:360px){
   .appbar{gap:6px}

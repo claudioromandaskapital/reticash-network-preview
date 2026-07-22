@@ -512,7 +512,6 @@ body.dk .inv-est.revocada{color:#fca5a5}
     <span class="role">Network</span>
     <span class="sp"></span>
     <span class="lvl-chip" id="lvl-chip"><span class="lvl-chip-medal" id="lvl-chip-medal">🥇</span><span class="lvl-chip-name" id="lvl-chip-name">Oro</span></span>
-    <span class="clock"><span class="cdot"></span> <span id="clock-live">—</span></span>
     <button class="rc-bell" id="rc-bell" onclick="openNotif()" aria-label="Notificaciones">
       <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span class="rc-bell-badge" id="rc-bell-badge">2</span>
@@ -1404,7 +1403,6 @@ function refreshSimSlider(){
   $("sim-now-lbl").textContent = s===0?"recién creada":(s>=60?"vencimiento":(rem+" min al vencimiento"+(rem<=RISK_THRESHOLD_MIN?" · en Riesgo":"")));
   const active=document.querySelector(".sc.on").id;
   if(active==="s-ordenes")paintOrdenes(); else if(active==="s-mercado")paintMercado();
-  paintClockLive();
 }
 document.addEventListener("input", e=>{ if(e.target&&e.target.id==="sim-now")refreshSimSlider(); });
 function simExecFull(){ if(!ORD_VIVA||(ORD_VIVA.estado!=="pending"&&ORD_VIVA.estado!=="partial")){toast("No hay Orden viva","err");return;} ORD_VIVA.paid=ORD_VIVA.monto;ORD_VIVA.estado="completed";HISTORIAL.unshift(archiveOrden("completed"));ORD_VIVA=null;closeAll();toast("Ejecutada íntegra · Beneficio Real registrado","ok");tab("ordenes"); }
@@ -1437,8 +1435,6 @@ function tglSwitch(id){ const el=$(id); el.setAttribute("aria-checked", el.getAt
 
 /* Filtros */
 document.querySelectorAll("#filt button").forEach(b=>b.addEventListener("click",()=>{HIST_FILTER=b.dataset.f;paintHistorial();}));
-/* Reloj */
-function paintClockLive(){ $("clock-live").textContent=new Date(now()).toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"}); }
 /* Amount */
 $("amt").addEventListener("input",()=>paintCotizador());
 /* Toggle sentido */
@@ -1467,8 +1463,7 @@ SA.addEventListener("scroll", onScroll);
 function scrollTop(){ window.scrollTo({top:0,behavior:"smooth"}); SA.scrollTo && SA.scrollTo({top:0,behavior:"smooth"}); }
 
 /* Boot */
-paintClockLive(); paintMercado(); refreshSimSlider(); paintBellBadge(); paintTierChip();
-setInterval(paintClockLive,30000);
+paintMercado(); refreshSimSlider(); paintBellBadge(); paintTierChip();
 setInterval(()=>{ const a=document.querySelector(".sc.on"); if(a&&a.id==="s-ordenes")paintClk(); },1000);
 </script>
 </body>
