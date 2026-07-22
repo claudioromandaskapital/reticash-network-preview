@@ -1,0 +1,1469 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0A0A0F">
+<title>Network · Interfaz simulada del Cliente</title>
+<!--
+  ══════════════════════════════════════════════════════════════════════════
+  Network · Interfaz simulada del flujo del Cliente · v3
+  Unidad 3 (v3), paso 2 del orden inviolable §3 CLAUDE.md.
+  Fecha: 2026-07-21.
+
+  ─── JERARQUÍA DE FUENTES · TRES CAPAS (se hereda a TODA interfaz Network) ───
+
+  1 · CONTRATO ontológico (contratos/nucleo_membresia_caja.md) — LA ONTOLOGÍA.
+      Innegociable. Vocabulario, objetos, acciones, estados. Toda categoría
+      visible acá sale del contrato.
+
+  2 · MM (customer.html + app.css) — EL FLUJO.
+      Esqueleto de pantallas y mecánica probada en operación real: appbar,
+      bnav, cotizador con toggle, reloj dual, QR con reloj interno, candado
+      orden viva, kick modal, DISTRIBUCIÓN de la capa conductual (tier en
+      header, bloque de comportamiento en Mercado, paintOrdPerdido en
+      Órdenes), historial con ciclo. Voz traducida al contrato.
+
+  3 · CM (mercado.css + app.css + mercado.html) — EL DISEÑO.
+      Ya no "vara de calidad": es LA CAPA DE DISEÑO por herencia directa.
+      Destilado en el asset propio del repo → network-design-system.css
+      (linkeado abajo): tokens, componentes, bottom sheets, estados,
+      transiciones, dark mode, tipografía, animaciones. Esta interfaz se
+      construye SOBRE ese sistema; acá abajo solo va el CSS específico de
+      las piezas del cliente (cotizador, tablero ciego, orden viva,
+      veredicto, bloque conductual, referidos).
+
+  Correcciones ya integradas (C1-C3 del Arquitecto) + este turno:
+   · C1 · Capa conductual del núcleo COMPLETA y distribuida como en MM:
+          tier chip en header, bloque de comportamiento en Mercado,
+          paintOrdPerdido (Beneficio Perdido del mes) en Órdenes, nudges.
+          Estado {has_data:false} neutro cuando el servicio SCI no responde.
+   · C2 · Ceguera del tablero: TC + Capacidad + zona, sin nombre. Identidad
+          revelada en CreateOrder.
+   · C3 · Referido / Invitación con lista de estados. Sin recompensas.
+   · Mecánica nueva (§1.4 contrato): Beneficio Potencial ESTIMADO en vivo
+          contra el mejor TC vigente del mercado ciego, ROTULADO como
+          estimación (§6.3 "si estimás, decilo"). No es el evento — ese nace
+          en CreateOrder. Si el cliente elige otra oferta, recalcula.
+
+  Si el vocabulario del contrato no alcanza: divergencia registrada, no
+  invento (§2 CLAUDE.md).
+  ══════════════════════════════════════════════════════════════════════════
+-->
+<link rel="stylesheet" href="network-design-system.css">
+<style>
+/* ═══════════ CSS ESPECÍFICO DEL CLIENTE (lo compartido está en el design system) ═══════════ */
+
+/* Saludo */
+.greet-block{margin-bottom:14px}
+.greet-h{font-size:1.42rem;font-weight:900;letter-spacing:-.03em;color:var(--ink);margin:0 0 4px;line-height:1.1}
+.greet-sub{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--ink3);font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+
+/* GATE DE MEMBRESÍA */
+.mgate{border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--brd)}
+.mgate.req{background:var(--surf);border-color:var(--brd2)}
+.mgate.wait-cash{background:var(--amber-bg);border-color:var(--amber-brd)}
+.mgate.wait-digital{background:var(--blue-bg);border-color:var(--blue-brd)}
+.mgate.grace{background:var(--amber-bg);border-color:var(--amber-brd)}
+.mgate-ey{font-size:.58rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+.mgate.wait-cash .mgate-ey,.mgate.grace .mgate-ey{color:#92400E}
+.mgate.wait-digital .mgate-ey{color:#1E40AF}
+body.dk .mgate.wait-cash .mgate-ey,body.dk .mgate.grace .mgate-ey{color:#fcd34d}
+body.dk .mgate.wait-digital .mgate-ey{color:#93c5fd}
+.mgate-t{font-size:.95rem;font-weight:900;letter-spacing:-.02em;color:var(--ink);margin:0 0 4px}
+.mgate-s{font-size:.7rem;color:var(--ink3);line-height:1.5;font-weight:600}
+.mgate-s strong{color:var(--ink2);font-weight:800}
+.mgate-code{font-family:'SF Mono',Menlo,monospace;font-weight:800;font-size:1rem;letter-spacing:.1em;color:var(--ink);background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px 12px;display:inline-block;margin-top:10px}
+.mgate-btn{margin-top:12px;width:100%;background:var(--ink);color:var(--surf);border:0;border-radius:10px;padding:12px;font-family:inherit;font-size:.8rem;font-weight:800;letter-spacing:.01em;cursor:pointer;transition:background var(--t-fast) var(--ease)}
+.mgate-btn:hover{background:var(--red)}
+
+/* Recorridos de activación (canales como acciones distintas) */
+.chan-card{border:1.5px solid var(--brd2);border-radius:12px;padding:14px 15px;margin-bottom:10px;cursor:pointer;transition:border-color var(--t-fast) var(--ease),background var(--t-fast) var(--ease)}
+.chan-card:hover{border-color:var(--ink);background:var(--surf2)}
+.chan-card-h{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.chan-ic{width:36px;height:36px;border-radius:10px;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex:0 0 auto}
+.chan-card.efectivo .chan-ic{background:var(--amber-bg)}
+.chan-card.digital .chan-ic{background:var(--blue-bg)}
+.chan-t{font-size:.88rem;font-weight:900;letter-spacing:-.01em;color:var(--ink)}
+.chan-tag{font-size:.5rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:var(--r-pill);background:var(--surf3);color:var(--ink3);margin-left:auto}
+.chan-tag.def{background:var(--amber-bg);color:#92400E}
+body.dk .chan-tag.def{color:#fcd34d}
+.chan-d{font-size:.68rem;color:var(--ink3);line-height:1.5;font-weight:600}
+.chan-guard{font-size:.62rem;color:var(--ink4);line-height:1.5;font-weight:600;margin-top:6px;padding:10px 12px;background:var(--surf2);border-radius:9px}
+.chan-guard strong{color:var(--ink2);font-weight:800}
+.act-benef{background:var(--surf2);border:1px solid var(--brd);border-radius:10px;padding:12px 14px;margin:12px 0}
+.act-benef-r{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--brd);font-size:.75rem;gap:10px}
+.act-benef-r:last-child{border-bottom:0}
+.act-benef-r .k{color:var(--ink3);font-weight:600}
+.act-benef-r .v{color:var(--ink);font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.act-benef-r .v.hl{color:var(--green)}
+.act-steps{margin:12px 0;padding:0;list-style:none;counter-reset:s}
+.act-step{position:relative;padding:0 0 12px 34px;font-size:.72rem;color:var(--ink2);line-height:1.5;font-weight:600;counter-increment:s}
+.act-step::before{content:counter(s);position:absolute;left:0;top:-2px;width:22px;height:22px;border-radius:50%;background:var(--amber-bg);color:#92400E;font-size:.7rem;font-weight:900;display:flex;align-items:center;justify-content:center}
+body.dk .act-step::before{color:#fcd34d}
+.act-step:last-child{padding-bottom:0}
+.act-code{text-align:center;font-family:'SF Mono',Menlo,monospace;font-weight:800;font-size:1.3rem;letter-spacing:.12em;color:var(--ink);background:var(--surf2);border:1.5px dashed var(--brd2);border-radius:12px;padding:16px;margin:12px 0}
+
+/* MI CARD OPERAR (hero) */
+.op-hero{
+  background:var(--surf);border:1.5px solid var(--brd2);border-radius:16px;
+  padding:16px 18px 18px;margin-bottom:14px;position:relative;overflow:hidden;
+  transition:border-color var(--t) var(--ease);
+}
+.op-hero::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--brd2);transition:background var(--t-fast) var(--ease)}
+.op-hero.sell::before{background:var(--red)}
+.op-hero.buy::before{background:var(--green)}
+.op-hero-ey{font-size:.58rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;transition:color var(--t-fast) var(--ease)}
+.op-hero.sell .op-hero-ey{color:var(--red)}
+.op-hero.buy .op-hero-ey{color:var(--green)}
+.op-hero-t{font-size:1.1rem;font-weight:900;letter-spacing:-.02em;color:var(--ink);margin:0 0 12px;line-height:1.2}
+
+.op-lbl{font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:14px 0 6px}
+.op-lbl:first-child{margin-top:0}
+
+.q-amt{display:flex;gap:6px;align-items:stretch;margin-bottom:10px}
+.q-amt-btn{background:var(--surf2);border:1.5px solid var(--brd);border-radius:var(--r-input);width:54px;font-size:1.4rem;font-weight:900;color:var(--ink);cursor:pointer;font-family:inherit;line-height:1;transition:background var(--t-fast) var(--ease)}
+.q-amt-btn:hover{background:var(--surf3)}
+.q-amt-btn:active{transform:translateY(1px)}
+.q-amt-mid{flex:1;background:var(--surf2);border:1.5px solid var(--brd);border-radius:var(--r-input);display:flex;align-items:baseline;justify-content:center;gap:6px;padding:9px 4px}
+.q-amt-inp{background:transparent;border:0;text-align:right;font-size:1.7rem;font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink);width:calc(100% - 44px);font-family:inherit;outline:none;padding:0}
+.q-amt-usd{color:var(--ink3);font-weight:800;font-size:.85rem}
+.q-fast{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap}
+.q-fast-btn{position:relative;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--r-pill);padding:7px 14px;font-family:inherit;font-size:.68rem;font-weight:700;color:var(--ink2);cursor:pointer;transition:background var(--t-fast) var(--ease)}
+.q-fast-btn::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:var(--tap)}
+.q-fast-btn:hover{background:var(--surf3)}
+.q-fast-btn.on{background:var(--ink);color:var(--surf);border-color:var(--ink)}
+
+/* Referencias (Referencia de Mercado + Mejor precio vigente) */
+.ref-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.ref-cell{padding:9px 12px;background:var(--surf2);border:1px solid var(--brd);border-radius:9px}
+.ref-cell-l{font-size:.55rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);line-height:1.3}
+.ref-cell-v{font-size:.94rem;font-weight:900;font-variant-numeric:tabular-nums;color:var(--ink);margin-top:3px}
+.ref-cell-v small{font-size:.55rem;font-weight:700;color:var(--ink3);margin-left:3px}
+.ref-cell.best .ref-cell-v{color:var(--ink)}
+
+/* Estimación de Beneficio Potencial (rotulada) */
+.est{background:var(--surf2);border:1px solid var(--brd);border-radius:12px;padding:13px 15px;margin-bottom:12px;transition:background var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease)}
+.op-hero.sell .est{background:var(--red-bg);border-color:var(--red-brd)}
+.op-hero.buy .est{background:var(--green-bg);border-color:var(--green-brd)}
+.est-ey{font-size:.6rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:6px}
+.op-hero.sell .est-ey{color:#991B1B}
+.op-hero.buy .est-ey{color:#166534}
+body.dk .op-hero.sell .est-ey{color:#fca5a5}
+body.dk .op-hero.buy .est-ey{color:#4ade80}
+.est-tag{font-size:.5rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:var(--r-pill);background:var(--surf3);color:var(--ink3)}
+.est-v{font-size:1.95rem;font-weight:900;letter-spacing:-.035em;line-height:1.05;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:2px}
+.op-hero.sell .est-v{color:var(--red)}
+.op-hero.buy .est-v{color:var(--green)}
+.est-sub{font-size:.66rem;color:var(--ink3);margin-top:4px;line-height:1.45;font-weight:600}
+.est-sub strong{color:var(--ink2);font-weight:800}
+
+.disc{font-size:.65rem;color:var(--ink3);text-align:center;line-height:1.5;margin-top:10px;padding:0 4px;font-weight:600}
+
+/* TABLERO CIEGO */
+.blind-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:20px 0 10px;padding:0 2px}
+.blind-h-t{font-size:.7rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.blind-h-s{font-size:.62rem;font-weight:700;color:var(--ink3);letter-spacing:.02em}
+.blind-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.of-row{background:var(--surf);border:1px solid var(--brd);border-left:3px solid var(--brd2);border-radius:12px;padding:13px 15px;display:grid;grid-template-columns:1fr auto;gap:12px 14px;align-items:center;cursor:pointer;transition:background var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease);position:relative}
+.of-row:hover{background:var(--surf2)}
+.of-row:active{background:var(--surf3);transform:translateY(1px)}
+.of-row.on{border-color:var(--ink);border-left-color:var(--ink)}
+.of-row.top{border-left-color:var(--ink3)}
+.of-row.top.sell{border-left-color:var(--green)}
+.of-row.top.buy{border-left-color:var(--red)}
+.of-row.sin-cap{opacity:.55;cursor:not-allowed}
+.of-info{min-width:0}
+.of-id{font-size:1rem;font-weight:800;letter-spacing:-.01em;color:var(--ink);display:flex;align-items:center;gap:7px}
+.of-sel-dot{font-size:.55rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink);background:var(--surf3);padding:2px 6px;border-radius:var(--r-pill)}
+.of-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;align-items:center}
+.of-meta-i{font-size:.62rem;font-weight:700;color:var(--ink3);letter-spacing:.02em}
+.of-cap{font-size:.5rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:var(--r-pill);line-height:1.35}
+.of-cap.amplia{background:var(--green-bg);color:#166534}
+.of-cap.limitada{background:var(--amber-bg);color:#92400E}
+.of-cap.sin_capacidad{background:var(--red-bg);color:#991B1B}
+body.dk .of-cap.amplia{color:#4ade80}
+body.dk .of-cap.limitada{color:#fcd34d}
+body.dk .of-cap.sin_capacidad{color:#fca5a5}
+.of-price{text-align:right;white-space:nowrap}
+.of-tc{font-size:1.14rem;font-weight:900;letter-spacing:-.025em;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
+.of-bpu{font-size:.58rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-top:4px}
+.of-bpu.pos{color:var(--green)}
+.of-tag-mejor{position:absolute;top:-7px;right:11px;font-size:.5rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--surf);background:var(--ink);padding:3px 7px;border-radius:4px}
+.blind-nota{font-size:.62rem;color:var(--ink3);line-height:1.5;padding:10px 12px;background:var(--surf2);border:1px solid var(--brd);border-radius:9px;margin-bottom:14px;font-weight:600}
+.blind-nota strong{color:var(--ink2);font-weight:800}
+
+/* ══════════ BLOQUE CONDUCTUAL DEL NÚCLEO (§1.16 · distribución MM) ══════════ */
+.beh{background:var(--surf);border:1px solid var(--brd);border-radius:14px;padding:16px;margin-bottom:14px}
+.beh-title{font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin-bottom:12px}
+.beh-h{display:flex;align-items:center;gap:13px;margin-bottom:14px}
+/* Medidor de nivel (gauge circular) — ancla gráfica */
+.beh-gauge{position:relative;width:64px;height:64px;flex:0 0 auto}
+.beh-gauge-svg{width:64px;height:64px;transform:rotate(-90deg)}
+.beh-gauge-bg{fill:none;stroke:var(--surf3);stroke-width:5}
+.beh-gauge-fg{fill:none;stroke:url(#behgrad);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 1s var(--ease)}
+.beh-gauge-medal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.beh-tier-block{flex:1;min-width:0}
+.beh-tier-l{font-size:.55rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.beh-tier-n{font-size:1.05rem;font-weight:900;letter-spacing:-.02em;color:var(--ink);margin-top:1px}
+.beh-tier-pct{font-size:.62rem;font-weight:700;color:var(--ink3);margin-top:2px}
+.beh-score{text-align:right;position:relative}
+.beh-score-v{font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums}
+.beh-score-l{font-size:.55rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:2px}
+.beh-score .beh-info{position:absolute;top:-4px;right:-6px}
+.beh-info{background:transparent;border:0;color:var(--ink4);font-size:.9rem;padding:0 4px;cursor:pointer;font-family:inherit}
+.beh-info:hover{color:var(--ink2)}
+.beh-cells{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.beh-cell{background:var(--surf2);border-radius:10px;padding:11px 12px}
+.beh-cell-v{font-size:1.15rem;font-weight:900;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.beh-cell-l{font-size:.55rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin-top:3px;line-height:1.3}
+
+/* Racha grid */
+.beh-w-h{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 10px;gap:8px}
+.beh-w-t{font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3)}
+.beh-w-n{font-size:.75rem;font-weight:800;color:var(--ink)}
+.beh-w-n b{font-weight:900;font-size:1.05rem;letter-spacing:-.02em;color:var(--ink);margin-right:5px;font-variant-numeric:tabular-nums}
+.beh-w-grid{display:flex;gap:6px}
+.beh-w-cell{flex:1;text-align:center}
+.beh-w-box{width:100%;aspect-ratio:1;border-radius:8px;background:var(--surf3);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:var(--ink3)}
+.beh-w-box.on{background:var(--green);color:#fff}
+.beh-w-box.off{background:var(--surf3);color:var(--ink4)}
+.beh-w-box.cur{background:var(--surf2);color:var(--ink);border:1.5px dashed var(--amber-brd)}
+.beh-w-lbl{font-size:.5rem;font-weight:700;color:var(--ink3);margin-top:4px;letter-spacing:.03em}
+.beh-w-ops{font-size:.5rem;color:var(--ink4);margin-top:1px;font-weight:700}
+.beh-w-foot{font-size:.66rem;color:var(--ink3);margin-top:10px;font-weight:600}
+.beh-w-foot strong{color:var(--ink2);font-weight:800}
+
+/* Beneficio Capturado vs Dejado ir (núcleo) — ancla gráfica de Mercado */
+.bvd{margin:4px 0 10px}
+.bvd-row{margin-bottom:12px}
+.bvd-row:last-child{margin-bottom:0}
+.bvd-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:5px}
+.bvd-lbl{font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.bvd-lbl.g{color:#166534}.bvd-lbl.r{color:#991B1B}
+body.dk .bvd-lbl.g{color:#4ade80}body.dk .bvd-lbl.r{color:#fca5a5}
+.bvd-val{font-size:1.05rem;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bvd-val.g{color:var(--green)}.bvd-val.r{color:var(--red)}
+.bvd-track{height:12px;background:var(--surf3);border-radius:var(--r-pill);overflow:hidden}
+.bvd-fill{height:100%;border-radius:var(--r-pill);transition:width .5s var(--ease);min-width:3px}
+.bvd-fill.g{background:var(--green)}.bvd-fill.r{background:var(--red)}
+.bvd-foot{font-size:.66rem;color:var(--ink3);line-height:1.5;font-weight:600;margin-top:2px}
+.bvd-foot strong{color:var(--ink2);font-weight:800}
+
+/* Nudge conductual */
+.beh-nudge{background:var(--green-bg);border:1px solid var(--green-brd);border-radius:12px;padding:14px;margin-top:14px}
+.beh-nudge-ey{font-size:.55rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#166534}
+body.dk .beh-nudge-ey{color:#4ade80}
+.beh-nudge-v{font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--green);margin-top:3px;font-variant-numeric:tabular-nums}
+.beh-nudge-txt{font-size:.68rem;color:#166534;margin-top:3px;line-height:1.45;font-weight:600}
+body.dk .beh-nudge-txt{color:#4ade80}
+.beh-nudge-txt strong{font-weight:900}
+
+/* Estado neutro {has_data:false} */
+.beh-neutro{background:var(--surf);border:1px dashed var(--brd2);border-radius:14px;padding:22px 16px;margin-bottom:14px;text-align:center}
+.beh-neutro-ic{font-size:1.6rem;color:var(--ink4);margin-bottom:8px}
+.beh-neutro-t{font-size:.85rem;font-weight:800;color:var(--ink2);letter-spacing:-.01em}
+.beh-neutro-s{font-size:.68rem;color:var(--ink3);margin-top:4px;line-height:1.5;font-weight:600}
+
+/* ══════════ ÓRDENES ══════════ */
+.qr-card{background:var(--surf);border:1.5px solid var(--brd2);border-radius:18px;padding:18px 18px 16px;text-align:center;margin-bottom:12px;box-shadow:0 4px 20px rgba(0,0,0,.05);position:relative}
+.qr-tag{display:inline-flex;align-items:center;gap:7px;font-size:.6rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase;padding:5px 11px;border-radius:var(--r-pill);margin-bottom:14px;background:var(--green-bg);color:#166534}
+body.dk .qr-tag{color:#4ade80}
+.qr-tag.risk{background:var(--amber-bg);color:#92400E}
+body.dk .qr-tag.risk{color:#fcd34d}
+.qr-tag.risk .qr-pulse{background:var(--amber)}
+.qr-tag.expired{background:var(--red-bg);color:#991B1B}
+body.dk .qr-tag.expired{color:#fca5a5}
+.qr-tag.expired .qr-pulse{background:var(--red)}
+.qr-pulse{width:8px;height:8px;background:var(--green);border-radius:50%;animation:live-pulse 1.4s ease-in-out infinite}
+.qr-img{width:190px;height:190px;background:#fff;padding:12px;border:1.5px solid var(--brd);border-radius:14px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+.qr-code{font-family:'SF Mono',Menlo,monospace;font-weight:800;font-size:1.05rem;letter-spacing:.08em;margin-bottom:5px;color:var(--ink)}
+.qr-sub{font-size:.72rem;color:var(--ink3);margin-bottom:14px;font-weight:600}
+.qr-clock{background:var(--surf2);border:1px solid var(--brd);border-radius:9px;padding:10px 11px;text-align:center;font-size:.72rem;color:var(--ink2);font-weight:700}
+.qr-clock strong{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:900;font-size:.94rem;letter-spacing:.02em;margin-left:4px}
+.qr-clock.warn{background:var(--amber-bg);border-color:var(--amber-brd);color:#92400E}
+body.dk .qr-clock.warn{color:#fcd34d}
+.qr-clock.warn strong{color:var(--amber)}
+.qr-clock.exp{background:var(--red-bg);border-color:var(--red-brd);color:#991B1B}
+body.dk .qr-clock.exp{color:#fca5a5}
+.qr-clock.exp strong{color:var(--red)}
+.qr-data{margin-bottom:12px}
+
+.risk-banner{background:var(--amber-bg);border:1px solid var(--amber-brd);border-radius:11px;padding:11px 13px;margin:0 0 12px;display:flex;align-items:flex-start;gap:9px}
+.risk-banner-ic{font-size:1.15rem;line-height:1;flex:0 0 auto}
+.risk-banner-txt{font-size:.72rem;color:#78350F;line-height:1.45;flex:1;font-weight:600}
+body.dk .risk-banner-txt{color:#fcd34d}
+.risk-banner-txt strong{color:var(--amber);font-weight:900}
+
+/* paintOrdPerdido — Beneficio Perdido del mes (núcleo, siempre disponible) */
+.perdido-banner{background:var(--red-bg);border:1px solid var(--red-brd);border-radius:11px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:9px}
+.perdido-banner-ic{font-size:1.15rem;line-height:1;flex:0 0 auto}
+.perdido-banner-txt{font-size:.72rem;color:#991B1B;line-height:1.45;flex:1;font-weight:600}
+body.dk .perdido-banner-txt{color:#fca5a5}
+.perdido-banner-txt strong{font-weight:900}
+
+.cancel-btn{width:100%;background:transparent;border:1.5px solid var(--brd2);border-radius:10px;padding:11px;font-family:inherit;font-size:.72rem;font-weight:800;color:var(--ink3);cursor:pointer;margin-top:10px;transition:color var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease)}
+.cancel-btn:hover{color:var(--ink);border-color:var(--brd)}
+
+.empty-live{background:var(--surf);border:1.5px dashed var(--brd2);border-radius:14px;padding:32px 18px;text-align:center;margin-bottom:14px}
+.empty-live-t{font-weight:900;font-size:.95rem;color:var(--ink);margin-bottom:4px;letter-spacing:-.02em}
+.empty-live-s{font-size:.72rem;color:var(--ink3);margin-bottom:14px;font-weight:600;line-height:1.5}
+.empty-live-btn{background:var(--ink);color:var(--surf);border:0;border-radius:10px;padding:10px 22px;font-family:inherit;font-size:.75rem;font-weight:800;cursor:pointer;letter-spacing:.01em}
+
+.clk{background:var(--amber-bg);border:1px solid var(--amber-brd);border-radius:11px;padding:11px 14px;margin-bottom:12px;display:flex;align-items:center;gap:11px}
+.clk.no-live{background:var(--surf2);border-color:var(--brd)}
+.clk-ic{font-size:1.4rem;line-height:1}
+.clk-body{flex:1;min-width:0}
+.clk-ey{font-size:.58rem;color:#92400E;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+body.dk .clk-ey{color:#fcd34d}
+.clk.no-live .clk-ey{color:var(--ink3)}
+.clk-time{font-size:1.15rem;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--amber);margin-top:1px}
+.clk-time.warn{color:var(--red)}
+.clk.no-live .clk-time{color:var(--ink)}
+.clk-msg{font-size:.66rem;color:var(--ink3);margin-top:2px;line-height:1.4;font-weight:600}
+
+.veredict{background:var(--surf);border:1px solid var(--brd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.veredict-h{font-size:.62rem;color:var(--ink3);font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between}
+.veredict-h span{color:var(--ink);font-weight:900}
+.veredict-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vc{padding:11px 12px;border-radius:9px}
+.vc.gan{background:var(--green-bg)}
+.vc.per{background:var(--red-bg)}
+.vc-lbl{font-size:.55rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#166534}
+body.dk .vc.gan .vc-lbl{color:#4ade80}
+.vc.per .vc-lbl{color:#991B1B}
+body.dk .vc.per .vc-lbl{color:#fca5a5}
+.vc-v{font-size:1.2rem;font-weight:900;letter-spacing:-.025em;color:var(--green);font-variant-numeric:tabular-nums;margin-top:2px}
+.vc.per .vc-v{color:var(--red)}
+.vc-sub{font-size:.6rem;color:var(--ink3);margin-top:2px;font-weight:600}
+
+.esp{background:var(--surf);border:1px solid var(--brd);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.esp-h{font-size:.62rem;color:var(--ink3);font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:10px}
+.esp-bars{display:flex;align-items:flex-end;gap:6px;height:64px}
+.esp-b{flex:1;background:var(--surf3);border-radius:3px 3px 0 0;min-height:4px;transition:height .42s var(--ease)}
+.esp-b.gan{background:var(--green)}
+.esp-b.per{background:var(--red)}
+.esp-b.mix{background:linear-gradient(0deg,var(--red) 0%,var(--red) 50%,var(--green) 50%,var(--green) 100%)}
+.esp-l{display:flex;gap:6px;margin-top:6px}
+.esp-l div{flex:1;text-align:center;font-size:.55rem;color:var(--ink3);font-weight:700;letter-spacing:.02em}
+
+.filt{display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.filt::-webkit-scrollbar{display:none}
+.filt button{position:relative;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--r-pill);padding:7px 13px;font-family:inherit;font-size:.66rem;font-weight:800;color:var(--ink2);cursor:pointer;white-space:nowrap;flex:0 0 auto;letter-spacing:.03em;text-transform:uppercase;transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease)}
+.filt button::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:var(--tap)}
+.filt button:hover{background:var(--surf3)}
+.filt button.on{background:var(--ink);color:var(--surf);border-color:var(--ink)}
+
+.hist{background:var(--surf);border:1px solid var(--brd);border-radius:12px;overflow:hidden}
+.hi-row{display:grid;grid-template-columns:1fr auto auto;gap:10px 12px;align-items:center;padding:12px 15px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--t-fast) var(--ease)}
+.hi-row:last-child{border-bottom:0}
+.hi-row:hover{background:var(--surf2)}
+.hi-mo{font-weight:800;font-size:.92rem;color:var(--ink);letter-spacing:-.01em}
+.hi-mo small{color:var(--ink3);font-weight:600;font-size:.65rem;margin-left:5px}
+.hi-meta{font-size:.62rem;color:var(--ink3);margin-top:3px;display:flex;align-items:center;gap:5px;line-height:1.35;font-weight:600}
+.hi-pill{display:inline-block;padding:2px 6px;border-radius:var(--r-pill);font-size:.5rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;line-height:1.4}
+.hi-pill.amber{background:var(--amber-bg);color:#92400E}
+.hi-pill.green{background:var(--green-bg);color:#166534}
+.hi-pill.red{background:var(--red-bg);color:#991B1B}
+.hi-pill.gray{background:var(--surf3);color:var(--ink2)}
+body.dk .hi-pill.amber{color:#fcd34d}
+body.dk .hi-pill.green{color:#4ade80}
+body.dk .hi-pill.red{color:#fca5a5}
+.hi-benef{text-align:right;font-weight:900;font-size:.86rem;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.hi-benef.gan{color:var(--green)}
+.hi-benef.per{color:var(--red)}
+.hi-benef.mix{display:flex;flex-direction:column;align-items:flex-end;gap:0}
+.hi-benef.mix .g{color:var(--green);font-size:.75rem}
+.hi-benef.mix .p{color:var(--red);font-size:.66rem}
+.hi-benef .sub{font-size:.5rem;color:var(--ink3);font-weight:800;text-transform:uppercase;letter-spacing:.06em;display:block;margin-top:1px}
+.hi-chev{color:var(--ink4);font-size:1rem;font-weight:700}
+
+/* ══════════ PERFIL ══════════ */
+.pf-cred{background:var(--surf);border:1px solid var(--brd);border-radius:14px;padding:16px 15px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.pf-cred-av{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--red) 0%,#a3011a 100%);color:#fff;font-weight:900;font-size:1.36rem;letter-spacing:-.02em;display:flex;align-items:center;justify-content:center;flex:0 0 auto;box-shadow:0 4px 14px rgba(208,2,27,.22)}
+.pf-cred-info{min-width:0;flex:1}
+.pf-cred-n{font-size:.98rem;font-weight:900;letter-spacing:-.02em;color:var(--ink);line-height:1.2}
+.pf-cred-id{font-size:.62rem;color:var(--ink3);font-family:'SF Mono',Menlo,monospace;letter-spacing:.04em;margin-top:3px;font-weight:600}
+.pf-cred-since{font-size:.62rem;color:var(--ink4);margin-top:1px;font-weight:700}
+
+.ref-block{background:var(--surf);border:1px solid var(--brd);border-radius:14px;padding:16px;margin-bottom:14px}
+.ref-block-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
+.ref-block-t{font-size:.98rem;font-weight:900;letter-spacing:-.02em;color:var(--ink);margin:0}
+.ref-invite{background:var(--ink);color:var(--surf);border:0;border-radius:9px;padding:8px 14px;font-family:inherit;font-size:.7rem;font-weight:800;letter-spacing:.02em;cursor:pointer;transition:background var(--t-fast) var(--ease)}
+.ref-invite:hover{background:var(--red)}
+.ref-sub{font-size:.68rem;color:var(--ink3);margin-bottom:12px;line-height:1.5;font-weight:600}
+.inv-list{display:flex;flex-direction:column;gap:8px}
+.inv-row{background:var(--surf2);border:1px solid var(--brd);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:11px}
+.inv-av{width:36px;height:36px;border-radius:50%;background:var(--surf3);color:var(--ink3);border:1.5px solid var(--brd2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.72rem;letter-spacing:.02em;flex:0 0 auto}
+.inv-info{flex:1;min-width:0}
+.inv-n{font-size:.78rem;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.inv-meta{font-size:.6rem;color:var(--ink3);margin-top:2px;font-weight:600;letter-spacing:.01em}
+.inv-est{font-size:.5rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:var(--r-pill);flex:0 0 auto}
+.inv-est.enviada{background:var(--blue-bg);color:#1E40AF}
+body.dk .inv-est.enviada{color:#93c5fd}
+.inv-est.abierta{background:var(--amber-bg);color:#92400E}
+body.dk .inv-est.abierta{color:#fcd34d}
+.inv-est.aceptada{background:var(--green-bg);color:#166534}
+body.dk .inv-est.aceptada{color:#4ade80}
+.inv-est.vencida{background:var(--surf3);color:var(--ink3)}
+.inv-est.revocada{background:var(--red-bg);color:#991B1B}
+body.dk .inv-est.revocada{color:#fca5a5}
+.ref-nota{font-size:.6rem;color:var(--ink4);margin-top:10px;font-weight:600;line-height:1.5}
+
+.pf-recos{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.pf-reco{background:var(--surf2);border:1px solid var(--brd);border-radius:10px;padding:11px 13px}
+.pf-reco-t{font-size:.78rem;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.pf-reco-d{font-size:.66rem;color:var(--ink3);margin-top:3px;line-height:1.5;font-weight:600}
+.pf-nota{font-size:.6rem;color:var(--ink4);margin-top:12px;font-weight:600;line-height:1.5;padding:0 4px}
+
+.pf-set{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--brd);gap:12px}
+.pf-set:last-child{border-bottom:0}
+.pf-set-l{font-size:.78rem;font-weight:600;color:var(--ink2)}
+.pf-logout{background:transparent;border:1.5px solid var(--red);color:var(--red);border-radius:10px;padding:12px;font-family:inherit;font-size:.75rem;font-weight:800;cursor:pointer;width:100%;margin-top:12px;letter-spacing:.01em}
+.pf-logout:hover{background:var(--red);color:#fff}
+
+/* Detalle orden */
+.od-hero{background:var(--surf2);border:1px solid var(--brd);border-radius:11px;padding:14px 15px;text-align:center;margin-bottom:12px}
+.od-hero-l{font-size:.58rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.od-hero-v{font-size:1.85rem;font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:3px;line-height:1.1}
+.od-hero-v.g{color:var(--green)}
+.od-hero-v.p{color:var(--red)}
+.od-hero-v.m{color:var(--ink);font-size:1.15rem}
+.od-msg{font-size:.72rem;color:var(--ink3);text-align:center;line-height:1.5;margin-top:14px;padding:0 4px;font-weight:600}
+
+/* Reglas SCI */
+.rules-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.rule{background:var(--surf2);border:1px solid var(--brd);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.rule-body{min-width:0;flex:1}
+.rule-t{font-size:.75rem;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.rule-d{font-size:.6rem;color:var(--ink3);margin-top:2px;font-weight:600;line-height:1.4}
+.rule-p{font-size:.9rem;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap;flex:0 0 auto}
+.rule-p.pos{color:var(--green)}
+.rule-p.neg{color:var(--red)}
+
+/* Sim */
+.sim-fab{position:fixed;bottom:calc(env(safe-area-inset-bottom,10px) + 78px);right:var(--edge-r);z-index:170;background:var(--ink);color:var(--surf);border:0;border-radius:var(--r-pill);padding:8px 14px;min-height:36px;font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.24)}
+.sim-r{margin:12px 0}
+.sim-r label{display:block;color:var(--ink3);font-weight:800;font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.sim-r input[type=range]{width:100%;accent-color:var(--red)}
+.sim-slabels{display:flex;justify-content:space-between;color:var(--ink4);font-size:.58rem;margin-top:4px;font-weight:700}
+.sim-slabels b{color:var(--ink);font-weight:800}
+.sim-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px}
+.sim-btns button{background:var(--surf2);border:1px solid var(--brd);border-radius:8px;padding:9px 10px;font-family:inherit;font-size:.65rem;font-weight:800;color:var(--ink);cursor:pointer;letter-spacing:.02em;transition:background var(--t-fast) var(--ease)}
+.sim-btns button:hover{background:var(--surf3)}
+.sim-btns button.act{background:var(--red-bg);border-color:var(--red-brd);color:var(--red)}
+.sim-explain{margin-top:12px;color:var(--ink3);font-size:.62rem;line-height:1.5;padding:9px 11px;background:var(--surf2);border-radius:8px}
+</style>
+</head>
+<body>
+
+<!-- Kick modal preinstalado -->
+<div class="kick" id="kick">
+  <div class="kick-brand">RETI<em>CASH</em> NETWORK</div>
+  <div class="kick-ic">⛔</div>
+  <div class="kick-t">Sesión cerrada</div>
+  <div class="kick-s">Se abrió sesión de esta cuenta en otro dispositivo. Esta sesión fue cerrada por seguridad.</div>
+  <div class="kick-cd">Volverás al inicio en <strong id="kick-cd">10</strong> s</div>
+  <button class="kick-btn" onclick="kickReset()">Iniciar sesión ahora</button>
+</div>
+
+<!-- Sim FAB + overlay -->
+<button class="sim-fab" id="sim-fab" onclick="openSim()">Simulación</button>
+<div class="ovl" id="sim-ovl">
+  <div class="modal">
+    <button class="modal-x" onclick="closeAll()">×</button>
+    <div class="modal-t">Simulación · solo interfaz</div>
+    <div class="sim-r">
+      <label>Ahora ficticio (mueve el reloj de la Orden viva)</label>
+      <input type="range" id="sim-now" min="0" max="60" value="0">
+      <div class="sim-slabels"><span>t = t₀</span><b id="sim-now-lbl">recién creada</b><span>vencimiento</span></div>
+    </div>
+    <div class="sim-btns">
+      <button onclick="simExecFull()">Ejecutar íntegra</button>
+      <button onclick="simExecPartial()">Ejecutar 50%</button>
+      <button onclick="simCancel()">Cancelar orden</button>
+      <button onclick="simNoShow()">Cajero: no_show</button>
+      <button onclick="simExpire()">Barrido: expired</button>
+      <button onclick="simReset()">Reset todo</button>
+      <button id="sim-sci-btn" onclick="simToggleSCI()">Servicio SCI: caer</button>
+      <button onclick="simKick()">Kick modal</button>
+      <button onclick="simMemb('active')">Memb: activa</button>
+      <button onclick="simMemb('anon')">Memb: sin membresía</button>
+      <button onclick="simMemb('grace')">Memb: en gracia</button>
+      <button onclick="simMemb('expired')">Memb: vencida</button>
+      <button onclick="simCajeroCobra()">Cajero cobra (efectivo)</button>
+      <button onclick="simRetiConfirma()">RetiCash confirma (digital)</button>
+      <button onclick="simDark()">Toggle dark</button>
+    </div>
+    <div class="sim-explain">
+      <b>Umbral "en Riesgo"</b> = 30 min antes del vencimiento (§6.2.13). La Orden viva vence en 60 min desde t₀; cruzá los 30 min con el slider.<br><br>
+      <b>Servicio SCI: caer</b> — simula el motor conductual ausente. La capa conductual del núcleo pasa a estado neutro <span class="mono">{has_data:false}</span> sin romper la UI (§5.9 contrato). El ciclo del Beneficio (Real/Perdido/veredicto) NO se afecta — es dato del núcleo, no del servicio.
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <div class="proto-banner">Prototipo · datos de demostración</div>
+
+  <header class="appbar">
+    <span class="brand">RETI<em>CASH</em></span>
+    <span class="role">Network</span>
+    <span class="sp"></span>
+    <span class="lvl-chip" id="lvl-chip"><span class="lvl-chip-medal" id="lvl-chip-medal">🥇</span><span class="lvl-chip-name" id="lvl-chip-name">Oro</span></span>
+    <span class="clock"><span class="cdot"></span> <span id="clock-live">—</span></span>
+    <button class="rc-bell" id="rc-bell" onclick="openNotif()" aria-label="Notificaciones">
+      <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="rc-bell-badge" id="rc-bell-badge">2</span>
+    </button>
+    <button class="who-avatar" id="who-avatar" onclick="openMini()" aria-label="Perfil">ML</button>
+    <button class="appbar-exit" onclick="simKick()" aria-label="Salir">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </header>
+
+  <div class="sa">
+
+    <!-- ══════════ MERCADO ══════════ -->
+    <section class="sc on" id="s-mercado">
+
+      <div class="greet-block">
+        <h1 class="greet-h">Hola, <span id="cli-nombre">—</span></h1>
+        <div class="greet-sub"><span id="memb-chip-wrap"></span><span id="today">—</span></div>
+      </div>
+
+      <!-- GATE DE MEMBRESÍA (según estado / canal) -->
+      <div id="memb-gate"></div>
+
+      <!-- MI CARD OPERAR con estimación -->
+      <div class="op-hero sell" id="op-hero">
+        <div class="op-hero-ey" id="op-hero-ey">Operar</div>
+        <h2 class="op-hero-t">Registrá tu Orden</h2>
+
+        <div class="q-seg" id="q-seg">
+          <button data-dir="sell" class="on">Vendo USD</button>
+          <button data-dir="buy">Compro USD</button>
+        </div>
+
+        <div class="op-lbl">Cuánto vas a cambiar</div>
+        <div class="q-amt">
+          <button class="q-amt-btn" onclick="stepAmt(-500)">−</button>
+          <div class="q-amt-mid"><input class="q-amt-inp" id="amt" type="text" inputmode="numeric" value="5,000"><span class="q-amt-usd">USD</span></div>
+          <button class="q-amt-btn" onclick="stepAmt(500)">+</button>
+        </div>
+        <div class="q-fast" id="q-fast"></div>
+
+        <div class="ref-row">
+          <div class="ref-cell">
+            <div class="ref-cell-l">Referencia de Mercado</div>
+            <div class="ref-cell-v"><span id="ref-val">—</span><small id="ref-lado-lbl">venta</small></div>
+          </div>
+          <div class="ref-cell best">
+            <div class="ref-cell-l">Mejor precio vigente</div>
+            <div class="ref-cell-v"><span id="best-val">—</span><small>MXN/USD</small></div>
+          </div>
+        </div>
+
+        <div class="est">
+          <div class="est-ey">Beneficio Potencial estimado <span class="est-tag">estimación</span></div>
+          <div class="est-v" id="est-val">—</div>
+          <div class="est-sub" id="est-sub">—</div>
+        </div>
+
+        <button class="cli-exec side-sell" id="exec" onclick="openConfirm()">Registrar mi Orden · Vendo USD</button>
+        <div class="disc">El Beneficio Potencial se congela al crear la Orden, con el TC de la oferta que elijas. Su identidad (el Centro) se revela en el paso de confirmación.</div>
+      </div>
+
+      <!-- TABLERO CIEGO -->
+      <div class="blind-h">
+        <div class="blind-h-t">Mercado · Ofertas disponibles</div>
+        <div class="blind-h-s" id="blind-count">—</div>
+      </div>
+      <div class="blind-list" id="blind-list"></div>
+      <div class="blind-nota"><strong>El nombre del Centro no se muestra acá.</strong> Solo ves TC, Capacidad y zona. La identidad se revela cuando registrás tu Orden (contrato §1.7.1). Tocá una oferta para estimar con su TC.</div>
+
+      <!-- BLOQUE CONDUCTUAL (distribución MM: en Mercado) -->
+      <div id="beh-mercado"></div>
+
+    </section>
+
+    <!-- ══════════ ÓRDENES ══════════ -->
+    <section class="sc" id="s-ordenes">
+
+      <div id="ord-live-wrap"></div>
+
+      <div class="clk" id="clk">
+        <div class="clk-ic">⏱</div>
+        <div class="clk-body">
+          <div class="clk-ey" id="clk-ey">Tiempo</div>
+          <div class="clk-time" id="clk-time">—</div>
+          <div class="clk-msg" id="clk-msg">—</div>
+        </div>
+      </div>
+
+      <!-- paintOrdPerdido: Beneficio Perdido del mes (núcleo) -->
+      <div id="perdido-wrap"></div>
+
+      <div class="veredict">
+        <div class="veredict-h"><span>Julio 2026 · Beneficio</span></div>
+        <div class="veredict-grid">
+          <div class="vc gan"><div class="vc-lbl">Real (ganado)</div><div class="vc-v" id="vc-gan">—</div><div class="vc-sub" id="vc-gan-sub">—</div></div>
+          <div class="vc per"><div class="vc-lbl">Perdido</div><div class="vc-v" id="vc-per">—</div><div class="vc-sub" id="vc-per-sub">—</div></div>
+        </div>
+      </div>
+
+      <div class="esp">
+        <div class="esp-h">Espejo de tus últimas 4 semanas</div>
+        <div class="esp-bars" id="esp-bars"></div>
+        <div class="esp-l"><div>1 jul</div><div>8 jul</div><div>15 jul</div><div>21 jul</div></div>
+      </div>
+
+      <div class="blind-h"><div class="blind-h-t">Tus operaciones</div></div>
+      <div class="filt" id="filt">
+        <button class="on" data-f="all">Todas</button>
+        <button data-f="exec">Ejecutadas</button>
+        <button data-f="partial">Incompletas</button>
+        <button data-f="no_exec">No ejecutadas</button>
+        <button data-f="cancelled">Canceladas</button>
+      </div>
+      <div class="hist" id="hist"></div>
+
+    </section>
+
+    <!-- ══════════ PERFIL ══════════ -->
+    <section class="sc" id="s-perfil">
+
+      <div class="pf-cred">
+        <div class="pf-cred-av">ML</div>
+        <div class="pf-cred-info">
+          <div class="pf-cred-n">María López</div>
+          <div class="pf-cred-id">CST-20260214-M78L</div>
+          <div class="pf-cred-since">Cliente desde 14 feb 2026</div>
+        </div>
+      </div>
+
+      <!-- Bloque conductual detallado -->
+      <div id="beh-perfil"></div>
+
+      <!-- Referidos -->
+      <div class="ref-block">
+        <div class="ref-block-h">
+          <h2 class="ref-block-t">Invitar al Network</h2>
+          <button class="ref-invite" onclick="openInvite()">Invitar</button>
+        </div>
+        <div class="ref-sub">Invitá a alguien a unirse al Network. El alta se habilita con la vigencia del KYC de RetiCash — sin aprobaciones manuales.</div>
+        <div class="inv-list" id="inv-list"></div>
+        <div class="ref-nota">Las invitaciones registran el vínculo emisor→receptor como un hecho en la cadena de eventos, independiente de recompensas.</div>
+      </div>
+
+      <div class="pcard">
+        <div class="pcard-h"><h2 class="h2">Tu Membresía</h2><span id="memb-chip-wrap-2"></span></div>
+        <div class="pcard-r"><span class="k">Plan</span><span class="v">Pro</span></div>
+        <div class="pcard-r"><span class="k">Vence</span><span class="v">14 ago 2026</span></div>
+        <div class="pcard-r"><span class="k">Último canal de cobro</span><span class="v">Efectivo · ventanilla</span></div>
+        <div class="pcard-r"><span class="k">Vínculo</span><span class="v">RetiCash</span></div>
+      </div>
+
+      <div class="pcard">
+        <div class="pcard-h"><h2 class="h2">Recompensas del plan</h2></div>
+        <ul class="pf-recos">
+          <li class="pf-reco"><div class="pf-reco-t">Prellamada del TC</div><div class="pf-reco-d">Recibís aviso 2 horas antes del ajuste diario del TC en cada Centro.</div></li>
+          <li class="pf-reco"><div class="pf-reco-t">TC Lock extendido</div><div class="pf-reco-d">Tu Orden mantiene el TC congelado hasta 8 horas (vs. 4 horas del plan base).</div></li>
+          <li class="pf-reco"><div class="pf-reco-t">Historial exportable</div><div class="pf-reco-d">Reporte mensual descargable con Beneficio Real y Perdido detallados por Centro.</div></li>
+        </ul>
+        <div class="pf-nota">Las Recompensas del plan no incluyen precio del dólar diferenciado · el TC de cada Centro es único para todos sus Clientes (contrato §1.7, §1.15).</div>
+      </div>
+
+      <div class="pcard">
+        <div class="pcard-h"><h2 class="h2">Tu identidad</h2></div>
+        <div class="pcard-r"><span class="k">KYC</span><span class="v g">Vigente</span></div>
+        <div class="pcard-r"><span class="k">Custodia</span><span class="v">RetiCash</span></div>
+        <div class="pcard-r"><span class="k">Documento</span><span class="v">INE · ****1234</span></div>
+        <div class="pcard-r"><span class="k">Correo</span><span class="v">maria.lopez@example.com</span></div>
+        <div class="pcard-r"><span class="k">Teléfono</span><span class="v">+52 664 123 4567</span></div>
+        <div class="pf-nota">Tus datos y biometría los captura y custodia RetiCash. Los Centros donde operás nunca son dueños de tu identidad.</div>
+      </div>
+
+      <div class="pcard">
+        <div class="pcard-h"><h2 class="h2">Ajustes</h2></div>
+        <div class="pf-set"><span class="pf-set-l">Tema oscuro</span><button class="pf-toggle" id="pf-theme" role="switch" aria-checked="false" onclick="toggleDark()"><span class="pf-toggle-dot"></span></button></div>
+        <div class="pf-set"><span class="pf-set-l">Notificaciones push</span><button class="pf-toggle" id="pf-push" role="switch" aria-checked="true" onclick="tglSwitch('pf-push')"><span class="pf-toggle-dot"></span></button></div>
+        <button class="pf-logout" onclick="simKick()">Simular sesión cerrada en otro dispositivo</button>
+      </div>
+
+      <div class="legal-foot">
+        <p>RetiCash Network · operado por RetiCash LLC (Delaware, EUA)</p>
+        <p>RetiCash LLC no es casa de cambio ni Money Services Business, no custodia ni transmite fondos, no es parte de las operaciones. Las operaciones cambiarias son celebradas exclusivamente entre el Centro licenciado y sus Clientes.</p>
+      </div>
+
+    </section>
+
+  </div>
+
+  <nav class="bnav">
+    <button class="ni on" data-sc="mercado" onclick="tab('mercado')"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span class="ni-lbl">Mercado</span></button>
+    <button class="ni" data-sc="ordenes" onclick="tab('ordenes')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span class="ni-lbl">Órdenes</span></button>
+    <button class="ni" data-sc="perfil" onclick="tab('perfil')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="ni-lbl">Perfil</span></button>
+  </nav>
+</div>
+
+<!-- Notif panel + mini -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-h"><div class="notif-h-t">Notificaciones</div><button class="notif-h-act" onclick="markAllRead()">Marcar todo leído</button></div>
+  <div class="notif-body" id="notif-body"></div>
+</div>
+<div class="mini-panel" id="mini-panel">
+  <div class="mini-n">María López</div>
+  <div class="mini-r">Cliente · Network</div>
+  <div class="mini-mail">maria.lopez@example.com</div>
+  <div class="mini-sep"></div>
+  <button class="mini-salir" onclick="simKick()">Cerrar sesión</button>
+</div>
+
+<!-- Modales -->
+<div class="ovl" id="ovl-confirm">
+  <div class="modal">
+    <button class="modal-x" onclick="closeAll()">×</button>
+    <div class="modal-t">Confirmá tu Orden</div>
+    <div class="modal-s">Al confirmar se congelan el TC, la Referencia y el sentido — y el Beneficio Potencial deja de ser estimación para volverse hecho registrado. <strong>Acá se te revela el Centro y la sucursal.</strong></div>
+    <div class="kv-grid">
+      <div class="kv-cell"><div class="kv-l">Sentido</div><div class="kv-v" id="cf-sent">—</div></div>
+      <div class="kv-cell"><div class="kv-l">Monto</div><div class="kv-v" id="cf-monto">—</div></div>
+      <div class="kv-cell full"><div class="kv-l">Centro · Sucursal</div><div class="kv-v s" id="cf-ctr">—</div></div>
+      <div class="kv-cell"><div class="kv-l">TC a congelar</div><div class="kv-v" id="cf-tc">—</div></div>
+      <div class="kv-cell"><div class="kv-l">Referencia</div><div class="kv-v" id="cf-ref">—</div></div>
+      <div class="kv-cell full"><div class="kv-l">Beneficio Potencial</div><div class="kv-v g" id="cf-benef">—</div></div>
+    </div>
+    <div class="modal-btns"><button onclick="closeAll()">Cancelar</button><button class="primary" onclick="doCreateOrder()">Registrar Orden</button></div>
+  </div>
+</div>
+
+<div class="ovl" id="ovl-liveorder">
+  <div class="modal">
+    <button class="modal-x" onclick="closeAll()">×</button>
+    <div class="modal-t">Ya tenés una Orden viva</div>
+    <div class="modal-s" id="lo-sub">Solo puede haber una Orden viva por Cliente (contrato §6.2).</div>
+    <div class="modal-btns stack">
+      <button class="primary" onclick="liveOrderResolve('cancel')">Cancelar la anterior y registrar la nueva</button>
+      <button onclick="liveOrderResolve('merge')" id="lo-merge">Sumar el nuevo monto a la anterior (al TC original)</button>
+      <button onclick="closeAll()">No hacer nada</button>
+    </div>
+    <div class="modal-s" style="margin-top:12px;font-size:.62rem;color:var(--ink4)">Sumar aplica solo si el sentido coincide. Se ejecuta al TC congelado de la Orden original (contrato §1.9.2).</div>
+  </div>
+</div>
+
+<div class="ovl" id="ovl-cancel">
+  <div class="modal">
+    <button class="modal-x" onclick="closeAll()">×</button>
+    <div class="modal-t">Cancelar tu Orden</div>
+    <div class="modal-s">La cancelación libera tu Orden y <strong>no genera Beneficio Perdido</strong> (contrato §1.4: cancelar no penaliza).</div>
+    <div class="modal-btns"><button onclick="closeAll()">Volver</button><button class="danger" onclick="simCancel()">Sí, cancelar</button></div>
+  </div>
+</div>
+
+<div class="ovl" id="ovl-detail"><div class="modal" id="detail-body"></div></div>
+
+<div class="ovl" id="ovl-rules">
+  <div class="modal">
+    <button class="modal-x" onclick="closeAll()">×</button>
+    <div class="modal-t">Cómo ganás puntos</div>
+    <div class="modal-s">Reglas del servicio SCI+conductual. Cuando el servicio no responde, la interfaz muestra estado neutro sin romper (contrato §5.9).</div>
+    <ul class="rules-list" id="rules-list"></ul>
+  </div>
+</div>
+
+<div class="ovl" id="ovl-invite">
+  <div class="modal">
+    <button class="modal-x" onclick="closeAll()">×</button>
+    <div class="modal-t">Invitar al Network</div>
+    <div class="modal-s">La invitación es a <strong>RetiCash</strong>. La persona completará onboarding + KYC. El vínculo se registra al aceptar (contrato §1.17, §3.19). No hay recompensas visibles hoy.</div>
+    <div class="form-r"><label class="form-l" for="inv-nombre">Nombre</label><input class="form-i" id="inv-nombre" type="text" placeholder="Ej. Ana Torres"></div>
+    <div class="form-r"><label class="form-l" for="inv-mail">Correo</label><input class="form-i" id="inv-mail" type="email" placeholder="ana@example.com"></div>
+    <div class="form-r"><label class="form-l" for="inv-tel">Teléfono (opcional)</label><input class="form-i" id="inv-tel" type="tel" placeholder="+52 664 000 0000"></div>
+    <div class="modal-btns"><button onclick="closeAll()">Cancelar</button><button class="primary" onclick="doInvite()">Enviar invitación</button></div>
+    <div class="modal-s" style="margin-top:12px;font-size:.6rem">Anti-enumeration (§6.7 CLAUDE.md): respuesta uniforme con jitter y rate-limit. No revelamos si el correo ya está registrado.</div>
+  </div>
+</div>
+
+<!-- Activación: elección de canal (dos recorridos distintos, no un enum) -->
+<div class="ovl" id="ovl-activar">
+  <div class="modal">
+    <button class="modal-x" onclick="closeAll()">×</button>
+    <div class="modal-t">Activá tu Membresía Pro</div>
+    <div class="modal-s">La Membresía es tu acceso al marketplace. Elegí cómo pagarla — cada canal es un recorrido distinto.</div>
+    <div class="act-benef">
+      <div class="act-benef-r"><span class="k">Plan</span><span class="v">Pro</span></div>
+      <div class="act-benef-r"><span class="k">Precio</span><span class="v">$12 USD / mes</span></div>
+      <div class="act-benef-r"><span class="k">Vínculo</span><span class="v">RetiCash</span></div>
+    </div>
+    <div class="chan-card efectivo" onclick="openActivarEfectivo()">
+      <div class="chan-card-h"><div class="chan-ic">🏦</div><div class="chan-t">En ventanilla · efectivo</div><span class="chan-tag def">habitual</span></div>
+      <div class="chan-d">Andá a un Centro RetiCash y el Cajero cobra en efectivo. Tu Membresía se activa en el momento del cobro.</div>
+    </div>
+    <div class="chan-card digital" onclick="openActivarDigital()">
+      <div class="chan-card-h"><div class="chan-ic">📲</div><div class="chan-t">Desde la app · SPEI o CoDi</div></div>
+      <div class="chan-d">Transferí a RetiCash desde tu banco. Tu Membresía queda esperando hasta que RetiCash confirme el ingreso.</div>
+    </div>
+    <div class="chan-guard"><strong>La Membresía es de RetiCash en todos los canales.</strong> El Cajero cobra en su nombre — nunca es dueño de tu Membresía.</div>
+  </div>
+</div>
+
+<!-- Recorrido efectivo (presencial y bifásico) -->
+<div class="ovl" id="ovl-efectivo">
+  <div class="modal">
+    <button class="modal-x" onclick="closeAll()">×</button>
+    <div class="modal-t">Activación en ventanilla</div>
+    <div class="modal-s">Iniciaste la activación en efectivo. El cobro y la activación se completan <strong>presencialmente</strong> en un Centro RetiCash.</div>
+    <ol class="act-steps">
+      <li class="act-step">Andá a cualquier Centro RetiCash en TJ.</li>
+      <li class="act-step">Mostrá este código en ventanilla.</li>
+      <li class="act-step">El Cajero cobra <strong>$12 USD en efectivo</strong> y tu Membresía Pro se activa en el momento.</li>
+    </ol>
+    <div class="act-code" id="ef-code">RC-MEM-0000</div>
+    <div class="chan-guard"><strong>El Cajero cobra en nombre de RetiCash.</strong> El dinero es de RetiCash desde el primer segundo; el Cajero es el canal, no el dueño.</div>
+    <div class="modal-btns"><button class="primary" onclick="confirmEfectivo()">Entendido · ir a ventanilla</button></div>
+  </div>
+</div>
+
+<!-- Recorrido digital (se completa en la app) -->
+<div class="ovl" id="ovl-digital">
+  <div class="modal">
+    <button class="modal-x" onclick="closeAll()">×</button>
+    <div class="modal-t">Activación desde la app</div>
+    <div class="modal-s">Transferí a <strong>RetiCash</strong> desde tu banco. Elegí el medio.</div>
+    <div class="q-seg" id="dig-seg" style="margin-bottom:14px">
+      <button data-dig="spei" class="on" onclick="pickDig('spei')">SPEI</button>
+      <button data-dig="codi" onclick="pickDig('codi')">CoDi</button>
+    </div>
+    <div class="act-benef">
+      <div class="act-benef-r"><span class="k">Beneficiario</span><span class="v">Retícula SA de CV</span></div>
+      <div class="act-benef-r" id="dig-ref-row"><span class="k">CLABE</span><span class="v mono" style="font-size:.68rem">012 180 00123456789 0</span></div>
+      <div class="act-benef-r"><span class="k">Monto</span><span class="v">$12 USD</span></div>
+      <div class="act-benef-r"><span class="k">Concepto</span><span class="v">MEMB-CST-M78L</span></div>
+    </div>
+    <div class="chan-guard">El beneficiario es <strong>RetiCash</strong>, nunca el Centro. Tu Membresía queda en <strong>esperando confirmación</strong> hasta que RetiCash valide el ingreso.</div>
+    <div class="modal-btns"><button onclick="closeAll()">Cancelar</button><button class="primary" onclick="confirmDigital()">Ya transferí</button></div>
+  </div>
+</div>
+
+<button class="to-top" id="to-top" onclick="scrollTop()" aria-label="Volver arriba">
+  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+</button>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+/* ══════════ Datos ficticios ══════════ */
+const CLIENTE = { id:"CST-20260214-M78L", nombre:"María López", primer_nombre:"María", iniciales:"ML", email:"maria.lopez@example.com", telefono:"+52 664 123 4567", ciudad:"Tijuana", kyc_valid:true, cliente_desde:"2026-02-14" };
+let MEMB = { plan:"Pro", estado:"active", vence:"2026-08-14", canal_ultimo:"efectivo" };
+
+const CENTROS = [
+  { id:"c1", nombre:"BorderXCash Tijuana",    sucursal:"Zona Norte", zona:"Zona Norte · Tijuana", tc_venta:19.90, tc_compra:19.10, capacidad:"amplia" },
+  { id:"c2", nombre:"Divisas Zona Norte",     sucursal:"Central",    zona:"Centro · Tijuana",     tc_venta:19.75, tc_compra:19.30, capacidad:"amplia" },
+  { id:"c3", nombre:"Central de Cambios",     sucursal:"Otay",       zona:"Otay · Tijuana",       tc_venta:19.55, tc_compra:19.45, capacidad:"limitada" },
+  { id:"c4", nombre:"Mesa Cambiaria del Río", sucursal:"Río",        zona:"Río · Tijuana",        tc_venta:19.40, tc_compra:19.50, capacidad:"limitada" },
+  { id:"c5", nombre:"CambioFacil Otay",       sucursal:"Otay Sur",   zona:"Otay · Tijuana",       tc_venta:19.20, tc_compra:19.65, capacidad:"sin_capacidad" }
+];
+const REF = { venta:round4(CENTROS.reduce((a,c)=>a+c.tc_venta,0)/CENTROS.length), compra:round4(CENTROS.reduce((a,c)=>a+c.tc_compra,0)/CENTROS.length), modo:"promedio_de_TCs_publicados" };
+
+const HISTORIAL = [
+  { id:"RC-Z2Q-8F1", fecha:"2026-07-18T11:20", sentido:"sell", monto:3000, tc:19.82, ref:18.90, estado:"completed", paid:3000, centro:"BorderXCash Tijuana", sucursal:"Zona Norte" },
+  { id:"RC-Y7K-3M9", fecha:"2026-07-14T09:05", sentido:"sell", monto:8000, tc:19.65, ref:18.85, estado:"partial",   paid:5000, centro:"Divisas Zona Norte",  sucursal:"Central" },
+  { id:"RC-X1N-P4A", fecha:"2026-07-08T16:40", sentido:"buy",  monto:2000, tc:19.00, ref:19.35, estado:"expired",   paid:0,    centro:"BorderXCash Tijuana", sucursal:"Otay" },
+  { id:"RC-W3T-Q8B", fecha:"2026-06-30T14:15", sentido:"sell", monto:4000, tc:19.90, ref:18.95, estado:"no_show",   paid:0,    centro:"BorderXCash Tijuana", sucursal:"Zona Norte" },
+  { id:"RC-V5H-L2C", fecha:"2026-06-25T10:30", sentido:"sell", monto:2500, tc:19.75, ref:18.85, estado:"cancelled", paid:0,    centro:"Divisas Zona Norte",  sucursal:"Central" },
+  { id:"RC-U9J-K6D", fecha:"2026-06-20T15:50", sentido:"sell", monto:6000, tc:19.55, ref:18.70, estado:"completed", paid:6000, centro:"BorderXCash Tijuana", sucursal:"Zona Norte" }
+];
+
+const NOW_BASE = new Date("2026-07-21T15:30:00-06:00").getTime();
+let SIM_MIN = 0;
+function now(){ return NOW_BASE + SIM_MIN*60*1000; }
+let ORD_VIVA = { id:"RC-8K3-XA7", centro_id:"c1", centro_nombre:"BorderXCash Tijuana", sucursal:"Zona Norte", sentido:"sell", monto:5000, tc_congelado:19.90, ref_congelada:REF.venta, creada_ms:NOW_BASE-5*3600*1000, exp_ts:NOW_BASE+1*3600*1000, estado:"pending", paid:0 };
+const RISK_THRESHOLD_MIN = 30;
+
+const INVITACIONES = [
+  { id:"IV-A1", nombre:"Ana Torres",  correo:"ana.torres@example.com", emitida:"2026-07-16", estado:"aceptada" },
+  { id:"IV-B2", nombre:"Lucas Ríos",  correo:"lucas.rios@example.com", emitida:"2026-07-19", estado:"abierta" },
+  { id:"IV-C3", nombre:"Marta Vidal", correo:"m.vidal@example.com",    emitida:"2026-07-20", estado:"enviada" }
+];
+const NOTIFS = [
+  { id:1, p:"critical", read:false, t:"Tu Orden entra en Riesgo en 30 min", body:"RC-8K3-XA7 · vence a las 04:30. Presentá tu código en ventanilla.", meta:"hace 2 h" },
+  { id:2, p:"info",     read:false, t:"Ana Torres se unió al Network",       body:"Tu invitación IV-A1 fue aceptada. El vínculo quedó registrado.",     meta:"ayer" },
+  { id:3, p:"passive",  read:true,  t:"Nuevo promedio de Referencia",         body:"La Referencia de venta se actualizó a 19.6800 esta mañana.",         meta:"ayer" }
+];
+const SCI_RULES = [
+  { pts:+80, t:"Ejecutar Orden a tiempo",     d:"Ejecutá tu Orden dentro del TC congelado — antes del vencimiento." },
+  { pts:+40, t:"Cerrar la semana operando",   d:"Cerrás la semana con al menos una Orden ejecutada." },
+  { pts:+20, t:"Invitación aceptada",         d:"Cuando alguien que invitaste completa su KYC en el Network." },
+  { pts:-30, t:"Vencimiento por no_show",      d:"No te presentaste en ventanilla. La Orden pasó a no_show." },
+  { pts:-15, t:"Cancelación con anticipación", d:"Cancelaste una Orden antes de ejecutar." }
+];
+
+/* ══════════ BEHAVIOR — viene del servicio SCI externo (§1.16). null = {has_data:false} ══════════ */
+let BEHAVIOR = {
+  has_data: true,
+  tier: { name:"Oro", medalla:"🥇" },
+  score: 1240,
+  next: { name:"Platino", target:1500 },
+  racha_activa: 6,
+  ops_ejecutadas: 14,
+  mejor_racha: 9,
+  racha_grid: [
+    { lbl:"jun 16", op:true, n:3 }, { lbl:"jun 23", op:true, n:2 }, { lbl:"jun 30", op:true, n:2 },
+    { lbl:"jul 7", op:true, n:1 }, { lbl:"jul 14", op:true, n:2 }, { lbl:"jul 21", op:true, n:1, cur:true }
+  ],
+  nudge: { potential:1650, ops_remaining:2 }
+};
+
+/* ══════════ Utils ══════════ */
+function $(id){ return document.getElementById(id); }
+function fmtMoney(n){ return "$" + Math.round(Math.abs(n)).toLocaleString("es-MX") + " MXN"; }
+function fmtUSD(n){ return Number(n).toLocaleString("es-MX") + " USD"; }
+function parseAmt(s){ return parseFloat(String(s).replace(/[^0-9.]/g,""))||0; }
+function round4(n){ return Math.round(n*10000)/10000; }
+function toast(msg, kind){ const t=document.createElement("div"); t.className="toast"+(kind?" "+kind:""); t.textContent=msg; $("toast-wrap").appendChild(t); setTimeout(()=>{t.style.opacity="0";setTimeout(()=>t.remove(),200);},2400); }
+function beneficioPorUSD(s, tc, ref){ return s==="sell" ? (tc-ref) : (ref-tc); }
+
+/* mejor oferta disponible (con capacidad) por sentido */
+function bestOferta(dir){
+  const disp = CENTROS.filter(c => c.capacidad !== "sin_capacidad");
+  return disp.map(c => ({ c, tc: dir==="sell"?c.tc_venta:c.tc_compra, bpd: beneficioPorUSD(dir, dir==="sell"?c.tc_venta:c.tc_compra, dir==="sell"?REF.venta:REF.compra) }))
+             .sort((a,b)=>b.bpd-a.bpd)[0];
+}
+
+function membChipHTML(){
+  const map={ anon:{cls:"expired",txt:"Sin Membresía"}, active:{cls:"",txt:"Membresía Pro · activa"}, pending_activation:{cls:"pending",txt:"Membresía Pro · esperando confirmación"}, grace:{cls:"grace",txt:"Membresía Pro · en gracia"}, expired:{cls:"expired",txt:"Membresía Pro · vencida"} };
+  const m=map[MEMB.estado]||map.anon; return '<span class="memb-chip '+m.cls+'">'+m.txt+'</span>';
+}
+
+/* ══════════ Estado UI ══════════ */
+let DIRECTION="sell";
+let SEL_CENTRO_ID=null; // null = sin elección explícita; la estimación usa el mejor
+let HIST_FILTER="all";
+let INTENTO_EFECTIVO=null; // afordancia de UI del efectivo bifásico (§1.5.2, divergencia §6.2.18)
+let DIG_METHOD="spei";
+
+function canOperate(){ return MEMB.estado==="active" || MEMB.estado==="grace"; }
+
+/* Gate de Membresía (según estado / canal) */
+function paintMembGate(){
+  const w=$("memb-gate");
+  if(INTENTO_EFECTIVO && MEMB.estado!=="active"){
+    w.innerHTML='<div class="mgate wait-cash"><div class="mgate-ey">Esperando activación en ventanilla</div><div class="mgate-t">Andá a ventanilla con tu código</div><div class="mgate-s">Mostrá <strong>'+INTENTO_EFECTIVO.code+'</strong> en cualquier Centro RetiCash. El Cajero cobra $12 USD en efectivo y tu Membresía se activa en el momento. <strong>El Cajero cobra en nombre de RetiCash.</strong></div><div class="mgate-code">'+INTENTO_EFECTIVO.code+'</div></div>';
+    return;
+  }
+  if(MEMB.estado==="pending_activation"){
+    w.innerHTML='<div class="mgate wait-digital"><div class="mgate-ey">Esperando confirmación de RetiCash</div><div class="mgate-t">Tu pago está en verificación</div><div class="mgate-s">Transferiste a RetiCash por SPEI/CoDi. Tu Membresía se activa cuando RetiCash confirma el ingreso. No hace falta que hagas nada más.</div></div>';
+    return;
+  }
+  if(MEMB.estado==="grace"){
+    w.innerHTML='<div class="mgate grace"><div class="mgate-ey">Membresía en gracia</div><div class="mgate-t">Renová para no perder el acceso</div><div class="mgate-s">Tu Membresía venció pero seguís operando en la ventana de gracia. Renovala antes de que se cierre.</div><button class="mgate-btn" onclick="openActivar()">Renovar Membresía</button></div>';
+    return;
+  }
+  if(MEMB.estado==="anon" || MEMB.estado==="expired"){
+    const t = MEMB.estado==="expired" ? "Tu Membresía venció" : "Necesitás una Membresía para operar";
+    w.innerHTML='<div class="mgate req"><div class="mgate-ey">Membresía requerida</div><div class="mgate-t">'+t+'</div><div class="mgate-s">La Membresía es tu acceso al marketplace del Network. Se paga a <strong>RetiCash</strong>, nunca al Centro.</div><button class="mgate-btn" onclick="openActivar()">Activar Membresía</button></div>';
+    return;
+  }
+  w.innerHTML=""; // active
+}
+
+/* Recorridos de activación */
+function openActivar(){ closeAll(true); $("ovl-activar").classList.add("on"); }
+function openActivarEfectivo(){
+  closeAll(true);
+  $("ef-code").textContent = "RC-MEM-" + Math.floor(Math.random()*9000+1000);
+  $("ovl-efectivo").classList.add("on");
+}
+function confirmEfectivo(){
+  INTENTO_EFECTIVO = { code: $("ef-code").textContent };
+  closeAll();
+  toast("Activación iniciada · andá a ventanilla con tu código","");
+  paintMercado();
+}
+function openActivarDigital(){ closeAll(true); pickDig("spei"); $("ovl-digital").classList.add("on"); }
+function pickDig(m){
+  DIG_METHOD=m;
+  document.querySelectorAll("#dig-seg button").forEach(b=>b.classList.toggle("on",b.dataset.dig===m));
+  $("dig-ref-row").innerHTML = m==="spei"
+    ? '<span class="k">CLABE</span><span class="v mono" style="font-size:.68rem">012 180 00123456789 0</span>'
+    : '<span class="k">CoDi</span><span class="v">QR en tu app bancaria</span>';
+}
+function confirmDigital(){
+  MEMB.estado = "pending_activation"; INTENTO_EFECTIVO=null;
+  closeAll();
+  toast("Transferencia registrada · esperando confirmación de RetiCash","");
+  paintMercado();
+}
+
+/* ══════════ Tabs ══════════ */
+function tab(k){
+  document.querySelectorAll(".sc").forEach(s=>s.classList.toggle("on", s.id==="s-"+k));
+  document.querySelectorAll(".ni").forEach(n=>n.classList.toggle("on", n.dataset.sc===k));
+  if(k==="ordenes") paintOrdenes();
+  if(k==="mercado") paintMercado();
+  if(k==="perfil")  paintPerfil();
+  closeAll(true);
+  window.scrollTo(0,0);
+}
+
+/* ══════════ Header tier chip (conductual) ══════════ */
+function paintTierChip(){
+  const chip=$("lvl-chip");
+  if(BEHAVIOR && BEHAVIOR.has_data){
+    chip.classList.remove("empty");
+    $("lvl-chip-medal").textContent = BEHAVIOR.tier.medalla;
+    $("lvl-chip-name").textContent = BEHAVIOR.tier.name;
+  } else {
+    chip.classList.add("empty");
+    $("lvl-chip-medal").textContent = "–";
+    $("lvl-chip-name").textContent = "Nivel —";
+  }
+}
+
+/* ══════════ Mercado ══════════ */
+function paintMercado(){
+  $("cli-nombre").textContent = CLIENTE.primer_nombre;
+  $("memb-chip-wrap").innerHTML = membChipHTML();
+  $("today").textContent = "hoy · " + new Date(now()).toLocaleDateString("es-MX",{day:"numeric",month:"long"});
+
+  document.querySelectorAll("#q-seg button").forEach(b=>b.classList.toggle("on", b.dataset.dir===DIRECTION));
+  const op=$("op-hero"); op.classList.remove("sell","buy"); op.classList.add(DIRECTION);
+  $("op-hero-ey").textContent = DIRECTION==="sell" ? "Vas a vender USD" : "Vas a comprar USD";
+
+  paintMembGate();
+  paintCotizador();
+  paintTablero();
+  paintBehaviorMercado();
+  paintTierChip();
+}
+
+function paintCotizador(){
+  const refVal = DIRECTION==="sell" ? REF.venta : REF.compra;
+  const best = bestOferta(DIRECTION);
+  // TC de la estimación: el elegido si hay, si no el mejor
+  const selCentro = SEL_CENTRO_ID ? CENTROS.find(c=>c.id===SEL_CENTRO_ID) : null;
+  const usaMejor = !selCentro;
+  const tc = selCentro ? (DIRECTION==="sell"?selCentro.tc_venta:selCentro.tc_compra) : best.tc;
+  const monto = parseAmt($("amt").value) || 0;
+  const bpd = beneficioPorUSD(DIRECTION, tc, refVal);
+  const est = bpd * monto;
+
+  $("ref-val").textContent = refVal.toFixed(4);
+  $("ref-lado-lbl").textContent = DIRECTION==="sell" ? "venta" : "compra";
+  $("best-val").textContent = best.tc.toFixed(2);
+
+  $("est-val").textContent = (est>=0?"+":"−") + fmtMoney(est);
+  const formula = DIRECTION==="sell" ? "("+tc.toFixed(2)+" − "+refVal.toFixed(4)+")" : "("+refVal.toFixed(4)+" − "+tc.toFixed(2)+")";
+  $("est-sub").innerHTML = usaMejor
+    ? "Estimado con el <strong>mejor TC vigente</strong> ("+tc.toFixed(2)+") · "+formula+" × "+fmtUSD(monto)+". Se congela al crear la Orden."
+    : "Estimado con la <strong>oferta que elegiste</strong> ("+tc.toFixed(2)+") · "+formula+" × "+fmtUSD(monto)+". Se congela al crear la Orden.";
+
+  const btn=$("exec"); btn.classList.remove("side-sell","side-buy","side-neutro");
+  if(canOperate()){
+    btn.classList.add("side-"+DIRECTION);
+    btn.textContent = "Registrar mi Orden · " + (DIRECTION==="sell"?"Vendo USD":"Compro USD");
+    btn.onclick = openConfirm;
+  } else {
+    btn.classList.add("side-neutro");
+    btn.textContent = "Activá tu Membresía para operar";
+    btn.onclick = openActivar;
+  }
+
+  const fasts=[1000,2500,5000,10000]; const fw=$("q-fast"); fw.innerHTML="";
+  fasts.forEach(m=>{ const b=document.createElement("button"); b.className="q-fast-btn"+(m===monto?" on":""); b.textContent="$"+(m/1000)+"k"; b.onclick=()=>{ $("amt").value=m.toLocaleString("es-MX"); paintCotizador(); }; fw.appendChild(b); });
+}
+
+function paintTablero(){
+  const tblr=$("blind-list"); tblr.innerHTML="";
+  const refVal = DIRECTION==="sell" ? REF.venta : REF.compra;
+  const rows = CENTROS.map(c=>{ const tc=DIRECTION==="sell"?c.tc_venta:c.tc_compra; return { c, tc, bpd:beneficioPorUSD(DIRECTION,tc,refVal) }; }).sort((a,b)=>b.bpd-a.bpd);
+  $("blind-count").textContent = rows.filter(r=>r.c.capacidad!=="sin_capacidad").length + " de " + rows.length + " disponibles";
+
+  rows.forEach((r,i)=>{
+    const disabled = r.c.capacidad==="sin_capacidad";
+    const on = r.c.id===SEL_CENTRO_ID && !disabled;
+    const bpdMil = Math.round(r.bpd*1000);
+    const isMejor = i===0 && r.bpd>0 && !disabled;
+    const card=document.createElement("div");
+    card.className="of-row"+(on?" on":"")+(isMejor?" top "+DIRECTION:"")+(disabled?" sin-cap":"");
+    if(!disabled) card.onclick=()=>{ SEL_CENTRO_ID=r.c.id; paintMercado(); };
+    card.innerHTML =
+      (isMejor?'<span class="of-tag-mejor">Mejor precio</span>':'') +
+      '<div class="of-info"><div class="of-id">Oferta '+(i+1)+(on?'<span class="of-sel-dot">elegida</span>':'')+'</div>' +
+      '<div class="of-meta"><span class="of-meta-i">'+r.c.zona+'</span><span class="of-cap '+r.c.capacidad+'">'+r.c.capacidad.replace("_"," ")+'</span></div></div>' +
+      '<div class="of-price"><div class="of-tc">'+r.tc.toFixed(2)+'</div><div class="of-bpu '+(r.bpd>0&&!disabled?"pos":"")+'">'+(r.bpd>0?"+":"")+'$'+Math.abs(bpdMil)+' / mil USD</div></div>';
+    tblr.appendChild(card);
+  });
+}
+
+function stepAmt(d){ const v=Math.max(0,(parseAmt($("amt").value)+d)); $("amt").value=v.toLocaleString("es-MX"); paintCotizador(); }
+
+/* ══════════ Bloque conductual — helpers compartidos ══════════ */
+function behNeutroHTML(){
+  return '<div class="beh-neutro"><div class="beh-neutro-ic">◔</div><div class="beh-neutro-t">Tu comportamiento aún no está disponible</div><div class="beh-neutro-s">El servicio que calcula tu nivel y tu racha no está respondiendo. Tus Órdenes y tu Beneficio siguen funcionando con normalidad.</div></div>';
+}
+/* medidor de nivel (gauge) + score — ancla gráfica del nivel */
+function behGaugeHTML(b){
+  const pct=Math.round(b.score/b.next.target*100);
+  const C=2*Math.PI*26; const off=C*(1-pct/100);
+  return '<div class="beh-h">' +
+    '<div class="beh-gauge">' +
+      '<svg viewBox="0 0 64 64" class="beh-gauge-svg"><defs><linearGradient id="behgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d97706"/><stop offset="1" stop-color="#D0021B"/></linearGradient></defs><circle class="beh-gauge-bg" cx="32" cy="32" r="26"/><circle class="beh-gauge-fg" cx="32" cy="32" r="26" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg>' +
+      '<div class="beh-gauge-medal">'+b.tier.medalla+'</div>' +
+    '</div>' +
+    '<div class="beh-tier-block"><div class="beh-tier-l">Tu nivel</div><div class="beh-tier-n">'+b.tier.name+'</div><div class="beh-tier-pct">'+pct+'% a '+b.next.name+'</div></div>' +
+    '<div class="beh-score"><div class="beh-score-v">'+b.score.toLocaleString("es-MX")+'</div><div class="beh-score-l">Puntos</div><button class="beh-info" onclick="openRules()">ⓘ</button></div>' +
+  '</div>';
+}
+/* cuadrícula de racha — ancla gráfica del comportamiento (mecánica MM) */
+function behRachaGridHTML(b){
+  let grid="";
+  b.racha_grid.forEach(d=>{
+    const cls=d.cur?"cur":(d.op?"on":"off"); const ic=d.cur?"·":(d.op?"✓":"✕");
+    grid += '<div class="beh-w-cell"><div class="beh-w-box '+cls+'">'+ic+'</div><div class="beh-w-lbl">'+d.lbl+'</div><div class="beh-w-ops">'+d.n+' op</div></div>';
+  });
+  return '<div class="beh-w-h"><div class="beh-w-t">Tu racha semanal</div><div class="beh-w-n"><b>'+b.racha_activa+'</b>seguidas</div></div>' +
+    '<div class="beh-w-grid">'+grid+'</div>' +
+    '<div class="beh-w-foot">Mejor racha: <strong>'+b.mejor_racha+' semanas</strong> · Esta semana: <strong>operada</strong></div>';
+}
+function behNudgeHTML(b){
+  return '<div class="beh-nudge"><div class="beh-nudge-ey">Oportunidad de la semana</div><div class="beh-nudge-v">+'+fmtMoney(b.nudge.potential)+'</div><div class="beh-nudge-txt">de <strong>Beneficio Potencial</strong> si cerrás <strong>'+b.nudge.ops_remaining+' operaciones más</strong> esta semana con el flujo típico de tu cuenta.</div></div>';
+}
+
+/* Beneficio del mes (NÚCLEO — ciclo del Beneficio ya modelado, siempre
+   disponible; independiente del servicio SCI). Ancla gráfica de Mercado:
+   Capturado (Beneficio Real) vs. Dejado ir (Beneficio Perdido). Voz del
+   contrato, no "utilidad"/"ganancia". No introduce distinción nueva. */
+function beneficioMesNucleo(){
+  let cap=0, dej=0;
+  HISTORIAL.forEach(o=>{
+    if(!o.fecha.startsWith("2026-07")) return;
+    const bpd=beneficioPorUSD(o.sentido,o.tc,o.ref);
+    if(o.estado==="completed"){ cap+=bpd*o.paid; }
+    else if(o.estado==="partial"){ cap+=bpd*o.paid; dej+=bpd*(o.monto-o.paid); }
+    else if(o.estado==="expired"||o.estado==="no_show"){ dej+=bpd*(o.monto-o.paid); }
+  });
+  return { cap, dej };
+}
+function bvdCardHTML(){
+  const {cap,dej}=beneficioMesNucleo();
+  const max=Math.max(1,cap,dej);
+  const capW=Math.round(cap/max*100), dejW=Math.round(dej/max*100);
+  const foot = dej>0
+    ? 'Cada Orden que ejecutás a tiempo pasa de <strong>Dejado ir</strong> a <strong>Capturado</strong>.'
+    : 'No dejaste ir Beneficio este mes. Seguí operando para sostenerlo.';
+  return '<div class="beh">' +
+    '<div class="beh-title">Tu Beneficio este mes</div>' +
+    '<div class="bvd">' +
+      '<div class="bvd-row"><div class="bvd-top"><span class="bvd-lbl g">Capturado</span><span class="bvd-val g">+'+fmtMoney(cap)+'</span></div><div class="bvd-track"><div class="bvd-fill g" style="width:'+capW+'%"></div></div></div>' +
+      '<div class="bvd-row"><div class="bvd-top"><span class="bvd-lbl r">Dejado ir</span><span class="bvd-val r">−'+fmtMoney(dej)+'</span></div><div class="bvd-track"><div class="bvd-fill r" style="width:'+dejW+'%"></div></div></div>' +
+    '</div>' +
+    '<div class="bvd-foot">'+foot+'</div>' +
+  '</div>';
+}
+
+/* Mercado: ancla del Beneficio (núcleo, siempre) + comportamiento (SCI, degrada) */
+function paintBehaviorMercado(){
+  const w=$("beh-mercado");
+  let html = bvdCardHTML(); // núcleo — siempre disponible
+  // Bloque SCI (gauge de nivel + nudge) o estado neutro si el servicio cayó
+  if(BEHAVIOR && BEHAVIOR.has_data){
+    const b=BEHAVIOR;
+    html += '<div class="beh"><div class="beh-title">Tu comportamiento en el Network</div>' + behGaugeHTML(b) + behNudgeHTML(b) + '</div>';
+  } else {
+    html += behNeutroHTML();
+  }
+  w.innerHTML = html;
+}
+
+/* Perfil: mismo bloque gráfico + celdas de detalle */
+function paintBehaviorPerfil(){
+  const w=$("beh-perfil");
+  if(!BEHAVIOR || !BEHAVIOR.has_data){ w.innerHTML = behNeutroHTML(); return; }
+  const b=BEHAVIOR;
+  w.innerHTML =
+    '<div class="beh">' +
+      '<div class="beh-title">Tu comportamiento en el Network</div>' +
+      behGaugeHTML(b) +
+      '<div class="beh-cells"><div class="beh-cell"><div class="beh-cell-v">'+b.racha_activa+'</div><div class="beh-cell-l">Semanas de racha</div></div><div class="beh-cell"><div class="beh-cell-v">'+b.ops_ejecutadas+'</div><div class="beh-cell-l">Órdenes ejecutadas</div></div></div>' +
+      behRachaGridHTML(b) +
+    '</div>';
+}
+
+/* ══════════ Confirmar orden ══════════ */
+function openConfirm(){
+  const c = SEL_CENTRO_ID ? CENTROS.find(x=>x.id===SEL_CENTRO_ID) : bestOferta(DIRECTION).c;
+  const tc = DIRECTION==="sell" ? c.tc_venta : c.tc_compra;
+  const ref = DIRECTION==="sell" ? REF.venta : REF.compra;
+  const monto = parseAmt($("amt").value);
+  if(monto<=0){ toast("Ingresá un monto en USD","err"); return; }
+  if(ORD_VIVA && (ORD_VIVA.estado==="pending"||ORD_VIVA.estado==="partial")){
+    const merge = ORD_VIVA.sentido===DIRECTION;
+    $("lo-merge").disabled=!merge; $("lo-merge").style.opacity=merge?"":".4";
+    $("lo-sub").innerHTML = 'Ya tenés una Orden <strong>'+ORD_VIVA.estado+'</strong> ('+ORD_VIVA.id+'): '+fmtUSD(ORD_VIVA.monto)+' a '+ORD_VIVA.tc_congelado.toFixed(2)+' en <strong>'+ORD_VIVA.centro_nombre+'</strong>. Solo puede haber una Orden viva por Cliente (contrato §6.2).'+(merge?'':'<br><br><em>Sumar no se ofrece: tu Orden viva es en sentido opuesto.</em>');
+    $("ovl-liveorder").classList.add("on"); return;
+  }
+  const bpd=beneficioPorUSD(DIRECTION,tc,ref); const benef=bpd*monto;
+  $("cf-sent").textContent = DIRECTION==="sell" ? "Vendo USD" : "Compro USD";
+  $("cf-monto").textContent = fmtUSD(monto);
+  $("cf-ctr").textContent = c.nombre+" · "+c.sucursal;
+  $("cf-tc").textContent = tc.toFixed(2);
+  $("cf-ref").textContent = ref.toFixed(4);
+  $("cf-benef").textContent = (benef>=0?"+":"−")+fmtMoney(benef);
+  $("ovl-confirm").classList.add("on");
+}
+function doCreateOrder(){
+  const c = SEL_CENTRO_ID ? CENTROS.find(x=>x.id===SEL_CENTRO_ID) : bestOferta(DIRECTION).c;
+  const tc = DIRECTION==="sell" ? c.tc_venta : c.tc_compra;
+  const ref = DIRECTION==="sell" ? REF.venta : REF.compra;
+  const monto = parseAmt($("amt").value);
+  const vig = MEMB.plan==="Pro" ? 8 : 4;
+  ORD_VIVA = { id:"RC-"+Math.floor(Math.random()*900+100)+"-"+String.fromCharCode(65+Math.floor(Math.random()*26))+Math.floor(Math.random()*99).toString().padStart(2,"0"), centro_id:c.id, centro_nombre:c.nombre, sucursal:c.sucursal, sentido:DIRECTION, monto, tc_congelado:tc, ref_congelada:ref, creada_ms:now(), exp_ts:now()+vig*3600*1000, estado:"pending", paid:0 };
+  SIM_MIN=0; $("sim-now").value=0; refreshSimSlider();
+  closeAll(); toast("Orden registrada · presentá tu código en ventanilla","ok"); tab("ordenes");
+}
+function liveOrderResolve(a){
+  const mn=parseAmt($("amt").value);
+  if(a==="cancel"){ HISTORIAL.unshift(archiveOrden("cancelled")); ORD_VIVA=null; closeAll(); setTimeout(()=>doCreateOrder(),100); }
+  else if(a==="merge"){ ORD_VIVA.monto+=mn; closeAll(); toast("Sumado al TC original "+ORD_VIVA.tc_congelado.toFixed(2),"ok"); tab("ordenes"); }
+}
+
+/* ══════════ Órdenes ══════════ */
+function paintOrdenes(){ paintOrdViva(); paintClk(); paintPerdido(); paintVeredicto(); paintEspejo(); paintHistorial(); }
+
+function paintOrdViva(){
+  const w=$("ord-live-wrap");
+  if(!ORD_VIVA || (ORD_VIVA.estado!=="pending"&&ORD_VIVA.estado!=="partial")){
+    w.innerHTML='<div class="empty-live"><div class="empty-live-t">Sin Órdenes vivas</div><div class="empty-live-s">Registrá una desde el Mercado.</div><button class="empty-live-btn" onclick="tab(\'mercado\')">Ir al Mercado</button></div>';
+    return;
+  }
+  const secsLeft=Math.max(0,Math.round((ORD_VIVA.exp_ts-now())/1000));
+  const minsLeft=secsLeft/60;
+  const inRisk=minsLeft<=RISK_THRESHOLD_MIN&&minsLeft>0;
+  const expired=secsLeft<=0;
+  const bpd=beneficioPorUSD(ORD_VIVA.sentido,ORD_VIVA.tc_congelado,ORD_VIVA.ref_congelada);
+  const sinPagar=Math.max(0,ORD_VIVA.monto-(ORD_VIVA.paid||0));
+  const benef=bpd*sinPagar;
+  const tag=expired?'<div class="qr-tag expired"><span class="qr-pulse"></span>Vencida</div>':(inRisk?'<div class="qr-tag risk"><span class="qr-pulse"></span>Beneficio en Riesgo</div>':'<div class="qr-tag"><span class="qr-pulse"></span>Orden lista para ejecutar</div>');
+  const risk=inRisk&&!expired?'<div class="risk-banner"><div class="risk-banner-ic">⏱</div><div class="risk-banner-txt">Tu Orden entró en el umbral de <strong>'+RISK_THRESHOLD_MIN+' minutos</strong> al vencimiento. Tu Beneficio Potencial de '+fmtMoney(benef)+' está <strong>en Riesgo</strong> — presentá tu código en ventanilla ahora.</div></div>':"";
+  w.innerHTML = risk +
+    '<div class="qr-card">'+tag+
+      '<div class="qr-img">'+qrSVG(ORD_VIVA.id)+'</div>'+
+      '<div class="qr-code">'+ORD_VIVA.id+'</div>'+
+      '<div class="qr-sub">Presentá este código en ventanilla</div>'+
+      '<div class="qr-data kv-grid">'+
+        '<div class="kv-cell"><div class="kv-l">'+(ORD_VIVA.sentido==="sell"?"Vendés":"Comprás")+'</div><div class="kv-v">'+fmtUSD(ORD_VIVA.monto)+'</div></div>'+
+        '<div class="kv-cell"><div class="kv-l">TC congelado</div><div class="kv-v">'+ORD_VIVA.tc_congelado.toFixed(2)+'</div></div>'+
+        '<div class="kv-cell"><div class="kv-l">Referencia congelada</div><div class="kv-v">'+ORD_VIVA.ref_congelada.toFixed(4)+'</div></div>'+
+        '<div class="kv-cell"><div class="kv-l">'+(inRisk?"En Riesgo":"Beneficio Potencial")+'</div><div class="kv-v '+(inRisk?"a":"g")+'">'+fmtMoney(benef)+'</div></div>'+
+        '<div class="kv-cell full"><div class="kv-l">Centro · Sucursal</div><div class="kv-v s">'+ORD_VIVA.centro_nombre+' · '+ORD_VIVA.sucursal+'</div></div>'+
+      '</div>'+
+      '<div class="qr-clock '+(expired?"exp":(inRisk?"warn":""))+'">'+(expired?'⛔ Orden vencida':'🔒 TC garantizado · vence en <strong>'+fmtHMS(secsLeft)+'</strong>')+'</div>'+
+      '<button class="cancel-btn" onclick="openCancel()">Cancelar mi Orden</button>'+
+    '</div>';
+}
+function fmtHMS(s){ const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60; return h+":"+String(m).padStart(2,"0")+":"+String(ss).padStart(2,"0"); }
+function qrSVG(id){
+  const seed=id.split("").reduce((a,c)=>((a<<5)-a+c.charCodeAt(0))|0,1); let rng=seed;
+  function rand(){ rng=(rng*9301+49297)%233280; return rng/233280; }
+  const N=21,cell=7,size=N*cell; let sq="";
+  [[0,0],[14,0],[0,14]].forEach(([cx,cy])=>{ for(let i=0;i<7;i++)for(let j=0;j<7;j++){ if((i===0||i===6||j===0||j===6)||(i>=2&&i<=4&&j>=2&&j<=4)) sq+='<rect x="'+((cx+j)*cell)+'" y="'+((cy+i)*cell)+'" width="'+cell+'" height="'+cell+'" fill="#000"/>'; } });
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){ if((i<8&&j<8)||(i<8&&j>=14)||(i>=14&&j<8))continue; if(rand()<0.48) sq+='<rect x="'+(j*cell)+'" y="'+(i*cell)+'" width="'+cell+'" height="'+cell+'" fill="#000"/>'; }
+  return '<svg viewBox="0 0 '+size+' '+size+'" width="166" height="166" xmlns="http://www.w3.org/2000/svg"><rect width="'+size+'" height="'+size+'" fill="#fff"/>'+sq+'</svg>';
+}
+function paintClk(){
+  const clk=$("clk");
+  if(ORD_VIVA && (ORD_VIVA.estado==="pending"||ORD_VIVA.estado==="partial")){
+    const s=Math.max(0,Math.round((ORD_VIVA.exp_ts-now())/1000));
+    clk.classList.remove("no-live"); $("clk-ey").textContent="Tiempo para ejecutar tu Orden";
+    $("clk-time").textContent=fmtHMS(s); $("clk-time").classList.toggle("warn",s<=RISK_THRESHOLD_MIN*60);
+    $("clk-msg").textContent="Presentá tu código en ventanilla antes del vencimiento.";
+  } else {
+    const last=HISTORIAL.filter(o=>o.estado==="completed"||o.estado==="partial").map(o=>new Date(o.fecha).getTime()).sort((a,b)=>b-a)[0];
+    clk.classList.add("no-live"); $("clk-ey").textContent="Tiempo sin operar";
+    if(last){ const diff=Math.max(0,now()-last); const s=Math.floor(diff/1000),d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60); $("clk-time").textContent=(d>0?d+" días ":"")+h+":"+String(m).padStart(2,"0"); }
+    else $("clk-time").textContent="—";
+    $("clk-time").classList.remove("warn"); $("clk-msg").textContent="Registrá una Orden desde el Mercado cuando quieras.";
+  }
+}
+
+/* paintOrdPerdido — Beneficio Perdido del mes (núcleo, siempre disponible) */
+function paintPerdido(){
+  const w=$("perdido-wrap");
+  let per=0, n=0;
+  HISTORIAL.forEach(o=>{
+    if(!o.fecha.startsWith("2026-07")) return;
+    const bpd=beneficioPorUSD(o.sentido,o.tc,o.ref);
+    if(o.estado==="expired"||o.estado==="no_show"){ per+=bpd*(o.monto-o.paid); n++; }
+    else if(o.estado==="partial"){ per+=bpd*(o.monto-o.paid); n++; }
+  });
+  if(per<=0){ w.innerHTML=""; return; }
+  w.innerHTML = '<div class="perdido-banner"><div class="perdido-banner-ic">▼</div><div class="perdido-banner-txt">Este mes dejaste de ganar <strong>'+fmtMoney(per)+'</strong> en '+n+' orden'+(n===1?'':'es')+' no ejecutada'+(n===1?'':'s')+' o incompleta'+(n===1?'':'s')+'. Ejecutá siempre lo que registrás para no volver a perderlo.</div></div>';
+}
+
+function paintVeredicto(){
+  let gan=0,per=0,nGan=0,nPer=0;
+  HISTORIAL.forEach(o=>{ if(!o.fecha.startsWith("2026-07"))return; const bpd=beneficioPorUSD(o.sentido,o.tc,o.ref);
+    if(o.estado==="completed"){gan+=bpd*o.paid;nGan++;}
+    else if(o.estado==="partial"){gan+=bpd*o.paid;per+=bpd*(o.monto-o.paid);nGan++;nPer++;}
+    else if(o.estado==="expired"||o.estado==="no_show"){per+=bpd*(o.monto-o.paid);nPer++;} });
+  $("vc-gan").textContent="+"+fmtMoney(gan); $("vc-per").textContent="−"+fmtMoney(per);
+  $("vc-gan-sub").textContent=nGan+" orden"+(nGan===1?"":"es")+" ejecutada"+(nGan===1?"":"s");
+  $("vc-per-sub").textContent=nPer+" orden"+(nPer===1?"":"es")+" no ejecutada"+(nPer===1?"":"s");
+}
+function paintEspejo(){
+  const bk=[{gan:0,per:0},{gan:0,per:0},{gan:0,per:0},{gan:0,per:0}];
+  HISTORIAL.forEach(o=>{ if(!o.fecha.startsWith("2026-07"))return; const day=parseInt(o.fecha.slice(8,10),10); const w=Math.min(3,Math.floor((day-1)/7)); const bpd=beneficioPorUSD(o.sentido,o.tc,o.ref);
+    if(o.estado==="completed")bk[w].gan+=bpd*o.paid; else if(o.estado==="partial"){bk[w].gan+=bpd*o.paid;bk[w].per+=bpd*(o.monto-o.paid);} else if(o.estado==="expired"||o.estado==="no_show")bk[w].per+=bpd*(o.monto-o.paid); });
+  const max=Math.max(1,...bk.map(b=>b.gan+b.per)); const wrap=$("esp-bars"); wrap.innerHTML="";
+  bk.forEach(b=>{ const total=b.gan+b.per; const h=Math.round((total/max)*62); let cls="esp-b"; if(b.gan>0&&b.per>0)cls+=" mix"; else if(b.gan>0)cls+=" gan"; else if(b.per>0)cls+=" per"; const d=document.createElement("div"); d.className=cls; d.style.height=h+"px"; d.title="Ganado: "+fmtMoney(b.gan)+" · Perdido: "+fmtMoney(b.per); wrap.appendChild(d); });
+}
+function paintHistorial(){
+  document.querySelectorAll("#filt button").forEach(b=>b.classList.toggle("on",b.dataset.f===HIST_FILTER));
+  const w=$("hist"); w.innerHTML="";
+  const map={ all:()=>true, exec:o=>o.estado==="completed", partial:o=>o.estado==="partial", no_exec:o=>o.estado==="expired"||o.estado==="no_show", cancelled:o=>o.estado==="cancelled" };
+  const f=HISTORIAL.filter(map[HIST_FILTER]);
+  if(f.length===0){ w.innerHTML='<div style="padding:22px;text-align:center;color:var(--ink3);font-size:.72rem;font-weight:600">Sin órdenes que mostrar.</div>'; return; }
+  f.forEach(o=>{
+    const bpd=beneficioPorUSD(o.sentido,o.tc,o.ref);
+    const gan=o.estado==="completed"?bpd*o.paid:(o.estado==="partial"?bpd*o.paid:0);
+    const per=o.estado==="expired"||o.estado==="no_show"?bpd*o.monto:(o.estado==="partial"?bpd*(o.monto-o.paid):0);
+    let right;
+    if(o.estado==="partial") right='<div class="hi-benef mix"><span class="g">+'+fmtMoney(gan)+'</span><span class="p">−'+fmtMoney(per)+'</span><span class="sub">real / perdido</span></div>';
+    else if(o.estado==="completed") right='<div class="hi-benef gan">+'+fmtMoney(gan)+'<span class="sub">Real</span></div>';
+    else if(o.estado==="expired"||o.estado==="no_show") right='<div class="hi-benef per">−'+fmtMoney(per)+'<span class="sub">Perdido</span></div>';
+    else right='<div class="hi-benef" style="color:var(--ink4)">—<span class="sub">Cancelada</span></div>';
+    const pm={ completed:["Ejecutada","green"], partial:["Incompleta","amber"], expired:["No ejecutada","red"], no_show:["No ejecutada","red"], cancelled:["Cancelada","gray"] };
+    const p=pm[o.estado]; const fechaTxt=new Date(o.fecha).toLocaleDateString("es-MX",{day:"numeric",month:"short"});
+    const row=document.createElement("div"); row.className="hi-row"; row.onclick=()=>openDetail(o);
+    row.innerHTML='<div><div class="hi-mo">'+fmtUSD(o.monto)+' <small>'+(o.sentido==="sell"?"vendo":"compro")+'</small></div><div class="hi-meta"><span>'+fechaTxt+'</span>·<span class="hi-pill '+p[1]+'">'+p[0]+'</span>·<span>'+o.centro+'</span></div></div>'+right+'<div class="hi-chev">›</div>';
+    w.appendChild(row);
+  });
+}
+function openDetail(o){
+  const bpd=beneficioPorUSD(o.sentido,o.tc,o.ref);
+  const gan=(o.estado==="completed"||o.estado==="partial")?bpd*o.paid:0;
+  const per=(o.estado==="expired"||o.estado==="no_show")?bpd*o.monto:(o.estado==="partial"?bpd*(o.monto-o.paid):0);
+  const pm={ completed:["Ejecutada","green"], partial:["Incompleta","amber"], expired:["No ejecutada · vencida por barrido","red"], no_show:["No ejecutada · marcada por Cajero","red"], cancelled:["Cancelada","gray"] };
+  const p=pm[o.estado]; let hero,msg;
+  if(o.estado==="completed"){ hero='<div class="od-hero"><div class="od-hero-l">Beneficio Real</div><div class="od-hero-v g">+'+fmtMoney(gan)+'</div></div>'; msg="Tu Beneficio Real se registró en el momento de la ejecución en ventanilla."; }
+  else if(o.estado==="partial"){ hero='<div class="od-hero"><div class="od-hero-l">Beneficio Real / Perdido</div><div class="od-hero-v m">+'+fmtMoney(gan)+' · −'+fmtMoney(per)+'</div></div>'; msg="Ejecutaste una parte y el resto quedó como Beneficio Perdido al vencer."; }
+  else if(o.estado==="expired"){ hero='<div class="od-hero"><div class="od-hero-l">Beneficio Perdido</div><div class="od-hero-v p">−'+fmtMoney(per)+'</div></div>'; msg="La Orden venció por tiempo. El barrido nocturno la selló (contrato §1.9.4)."; }
+  else if(o.estado==="no_show"){ hero='<div class="od-hero"><div class="od-hero-l">Beneficio Perdido</div><div class="od-hero-v p">−'+fmtMoney(per)+'</div></div>'; msg="El Cajero registró tu ausencia en ventanilla. La Orden pasó a no_show (contrato §1.9.4)."; }
+  else { hero='<div class="od-hero"><div class="od-hero-l">Cancelada</div><div class="od-hero-v m">—</div></div>'; msg="Cancelaste la Orden antes de ejecutar. Cancelar no genera Beneficio Perdido (contrato §1.4)."; }
+  $("detail-body").innerHTML='<button class="modal-x" onclick="closeAll()">×</button><div class="modal-t">Detalle de la Orden</div><div class="mono" style="font-size:.62rem;color:var(--ink4);margin-bottom:12px">'+o.id+'</div>'+hero+
+    '<div class="kv-grid"><div class="kv-cell"><div class="kv-l">Sentido</div><div class="kv-v">'+(o.sentido==="sell"?"Vendo USD":"Compro USD")+'</div></div><div class="kv-cell"><div class="kv-l">Monto declarado</div><div class="kv-v">'+fmtUSD(o.monto)+'</div></div><div class="kv-cell"><div class="kv-l">Ejecutado</div><div class="kv-v">'+fmtUSD(o.paid)+'</div></div><div class="kv-cell"><div class="kv-l">Estado</div><div class="kv-v"><span class="hi-pill '+p[1]+'">'+p[0]+'</span></div></div><div class="kv-cell"><div class="kv-l">TC congelado</div><div class="kv-v">'+o.tc.toFixed(2)+'</div></div><div class="kv-cell"><div class="kv-l">Referencia congelada</div><div class="kv-v">'+o.ref.toFixed(4)+'</div></div><div class="kv-cell full"><div class="kv-l">Centro · Sucursal</div><div class="kv-v s">'+o.centro+' · '+o.sucursal+'</div></div></div><div class="od-msg">'+msg+'</div>';
+  $("ovl-detail").classList.add("on");
+}
+
+/* ══════════ Perfil ══════════ */
+function paintPerfil(){ $("memb-chip-wrap-2").innerHTML=membChipHTML(); paintBehaviorPerfil(); paintInvitaciones(); paintTierChip(); }
+function paintInvitaciones(){
+  const w=$("inv-list"); w.innerHTML="";
+  if(INVITACIONES.length===0){ w.innerHTML='<div style="padding:14px;text-align:center;color:var(--ink3);font-size:.68rem;font-weight:600">Sin invitaciones aún.</div>'; return; }
+  const em={ enviada:"Enviada", abierta:"Abierta", aceptada:"Aceptada", vencida:"Vencida", revocada:"Revocada" };
+  INVITACIONES.forEach(inv=>{
+    const ini=inv.nombre.split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase();
+    const fx=new Date(inv.emitida).toLocaleDateString("es-MX",{day:"numeric",month:"short"});
+    const row=document.createElement("div"); row.className="inv-row";
+    row.innerHTML='<div class="inv-av">'+ini+'</div><div class="inv-info"><div class="inv-n">'+inv.nombre+'</div><div class="inv-meta">'+inv.correo+' · enviada '+fx+'</div></div><div class="inv-est '+inv.estado+'">'+em[inv.estado]+'</div>';
+    w.appendChild(row);
+  });
+}
+
+/* ══════════ Reglas, invitación, cancelar ══════════ */
+function openRules(){
+  const list=$("rules-list"); list.innerHTML="";
+  SCI_RULES.forEach(r=>{ const li=document.createElement("li"); li.className="rule"; li.innerHTML='<div class="rule-body"><div class="rule-t">'+r.t+'</div><div class="rule-d">'+r.d+'</div></div><div class="rule-p '+(r.pts>0?"pos":"neg")+'">'+(r.pts>0?"+":"")+r.pts+' pts</div>'; list.appendChild(li); });
+  $("ovl-rules").classList.add("on");
+}
+function openInvite(){ $("inv-nombre").value=""; $("inv-mail").value=""; $("inv-tel").value=""; $("ovl-invite").classList.add("on"); }
+function doInvite(){
+  const nombre=$("inv-nombre").value.trim(), mail=$("inv-mail").value.trim();
+  if(!nombre){ $("inv-nombre").classList.add("err"); return; }
+  if(!/^\S+@\S+\.\S+$/.test(mail)){ $("inv-mail").classList.add("err"); return; }
+  INVITACIONES.unshift({ id:"IV-"+Math.random().toString(36).slice(2,5).toUpperCase(), nombre, correo:mail, emitida:new Date(now()).toISOString().slice(0,10), estado:"enviada" });
+  closeAll(); toast("Invitación enviada · esperando aceptación","ok"); paintInvitaciones();
+}
+function openCancel(){ $("ovl-cancel").classList.add("on"); }
+
+/* ══════════ Notif + mini ══════════ */
+function openNotif(){ $("mini-panel").classList.remove("on"); const p=$("notif-panel"); if(p.classList.contains("on")){p.classList.remove("on");return;} paintNotifs(); p.classList.add("on"); }
+function paintNotifs(){ const b=$("notif-body"); b.innerHTML=""; if(NOTIFS.length===0){ b.innerHTML='<div class="notif-empty">Sin notificaciones nuevas.</div>'; return; } NOTIFS.forEach(n=>{ const it=document.createElement("div"); it.className="notif-item p-"+n.p+(n.read?" read":""); it.innerHTML='<div class="notif-t">'+n.t+'</div><div class="notif-body-t">'+n.body+'</div><div class="notif-meta">'+n.meta+'</div>'; it.onclick=()=>{n.read=true;paintNotifs();paintBellBadge();}; b.appendChild(it); }); }
+function paintBellBadge(){ const n=NOTIFS.filter(x=>!x.read).length; const el=$("rc-bell-badge"); if(n===0){el.style.display="none";}else{el.style.display="";el.textContent=n;} }
+function markAllRead(){ NOTIFS.forEach(n=>n.read=true); paintNotifs(); paintBellBadge(); }
+function openMini(){ $("notif-panel").classList.remove("on"); $("mini-panel").classList.toggle("on"); }
+
+/* ══════════ Cierre ══════════ */
+function closeAll(silent){ document.querySelectorAll(".ovl.on").forEach(o=>o.classList.remove("on")); $("notif-panel").classList.remove("on"); $("mini-panel").classList.remove("on"); if(!silent) document.querySelectorAll(".form-i.err").forEach(i=>i.classList.remove("err")); }
+
+/* ══════════ Simulación ══════════ */
+function openSim(){ $("sim-ovl").classList.add("on"); }
+function refreshSimSlider(){
+  const s=parseInt($("sim-now").value,10); SIM_MIN=s;
+  const rem=Math.max(0,60-s);
+  $("sim-now-lbl").textContent = s===0?"recién creada":(s>=60?"vencimiento":(rem+" min al vencimiento"+(rem<=RISK_THRESHOLD_MIN?" · en Riesgo":"")));
+  const active=document.querySelector(".sc.on").id;
+  if(active==="s-ordenes")paintOrdenes(); else if(active==="s-mercado")paintMercado();
+  paintClockLive();
+}
+document.addEventListener("input", e=>{ if(e.target&&e.target.id==="sim-now")refreshSimSlider(); });
+function simExecFull(){ if(!ORD_VIVA||(ORD_VIVA.estado!=="pending"&&ORD_VIVA.estado!=="partial")){toast("No hay Orden viva","err");return;} ORD_VIVA.paid=ORD_VIVA.monto;ORD_VIVA.estado="completed";HISTORIAL.unshift(archiveOrden("completed"));ORD_VIVA=null;closeAll();toast("Ejecutada íntegra · Beneficio Real registrado","ok");tab("ordenes"); }
+function simExecPartial(){ if(!ORD_VIVA||ORD_VIVA.estado!=="pending"){toast("Debe estar pending","err");return;} ORD_VIVA.paid=Math.round(ORD_VIVA.monto/2);ORD_VIVA.estado="partial";closeAll();toast("Ejecutada 50% · resto sigue vivo","ok");tab("ordenes"); }
+function simCancel(){ if(!ORD_VIVA){toast("No hay Orden viva","err");return;} HISTORIAL.unshift(archiveOrden("cancelled"));ORD_VIVA=null;closeAll();toast("Orden cancelada (sin Beneficio Perdido)","ok");tab("ordenes"); }
+function simNoShow(){ if(!ORD_VIVA){toast("No hay Orden viva","err");return;} HISTORIAL.unshift(archiveOrden("no_show"));ORD_VIVA=null;closeAll();toast("Cajero marcó no_show","");tab("ordenes"); }
+function simExpire(){ if(!ORD_VIVA){toast("No hay Orden viva","err");return;} HISTORIAL.unshift(archiveOrden("expired"));ORD_VIVA=null;closeAll();toast("Barrido nocturno · Orden expired","");tab("ordenes"); }
+function archiveOrden(e){ return { id:ORD_VIVA.id, fecha:new Date(now()).toISOString().slice(0,16), sentido:ORD_VIVA.sentido, monto:ORD_VIVA.monto, tc:ORD_VIVA.tc_congelado, ref:ORD_VIVA.ref_congelada, estado:e, paid:e==="completed"?ORD_VIVA.monto:(e==="partial"?ORD_VIVA.paid:0), centro:ORD_VIVA.centro_nombre, sucursal:ORD_VIVA.sucursal }; }
+function simReset(){ location.reload(); }
+function simMemb(estado){ MEMB.estado=estado; INTENTO_EFECTIVO=null; closeAll(); toast("Membresía → "+estado,""); tab("mercado"); }
+function simCajeroCobra(){ if(!INTENTO_EFECTIVO){ toast("No hay activación en efectivo iniciada","err"); return; } MEMB.estado="active"; INTENTO_EFECTIVO=null; closeAll(); toast("Cajero cobró en ventanilla · Membresía activa","ok"); tab("mercado"); }
+function simRetiConfirma(){ if(MEMB.estado!=="pending_activation"){ toast("No hay pago digital esperando confirmación","err"); return; } MEMB.estado="active"; closeAll(); toast("RetiCash confirmó el ingreso · Membresía activa","ok"); tab("mercado"); }
+let SCI_DOWN=false;
+const BEHAVIOR_FULL = JSON.parse(JSON.stringify(BEHAVIOR));
+function simToggleSCI(){
+  SCI_DOWN=!SCI_DOWN;
+  BEHAVIOR = SCI_DOWN ? { has_data:false } : JSON.parse(JSON.stringify(BEHAVIOR_FULL));
+  $("sim-sci-btn").textContent = SCI_DOWN ? "Servicio SCI: reactivar" : "Servicio SCI: caer";
+  $("sim-sci-btn").classList.toggle("act", SCI_DOWN);
+  const active=document.querySelector(".sc.on").id;
+  if(active==="s-mercado")paintMercado(); else if(active==="s-perfil")paintPerfil();
+  paintTierChip();
+  toast(SCI_DOWN?"Servicio SCI caído · capa conductual en estado neutro":"Servicio SCI reactivado", SCI_DOWN?"":"ok");
+}
+function simKick(){ closeAll(); const k=$("kick"); k.classList.add("on"); let s=10; $("kick-cd").textContent=s; const t=setInterval(()=>{s--;$("kick-cd").textContent=s;if(s<=0){clearInterval(t);kickReset();}},1000); }
+function kickReset(){ $("kick").classList.remove("on"); toast("Volviste al inicio",""); tab("mercado"); }
+function simDark(){ toggleDark(); }
+function toggleDark(){ document.body.classList.toggle("dk"); $("pf-theme").setAttribute("aria-checked",document.body.classList.contains("dk")?"true":"false"); }
+function tglSwitch(id){ const el=$(id); el.setAttribute("aria-checked", el.getAttribute("aria-checked")==="true"?"false":"true"); }
+
+/* Filtros */
+document.querySelectorAll("#filt button").forEach(b=>b.addEventListener("click",()=>{HIST_FILTER=b.dataset.f;paintHistorial();}));
+/* Reloj */
+function paintClockLive(){ $("clock-live").textContent=new Date(now()).toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"}); }
+/* Amount */
+$("amt").addEventListener("input",()=>paintCotizador());
+/* Toggle sentido */
+document.querySelectorAll("#q-seg button").forEach(b=>b.addEventListener("click",()=>{DIRECTION=b.dataset.dir;SEL_CENTRO_ID=null;paintMercado();}));
+/* Chrome Android teclado fix */
+/* Altura: la .app usa height:100dvh (design system) — dvh no miente en
+   iOS Safari como 100vh. Ya no hace falta el hack de innerHeight; se
+   deja un no-op por si alguna vista futura lo necesita. */
+function fixAppHeight(){}
+window.addEventListener("orientationchange",fixAppHeight);
+
+/* Back-to-top — el scroll ocurre en window (la .app crece más que el viewport) */
+const SA=document.querySelector(".sa");
+function onScroll(){ const y=window.scrollY||document.documentElement.scrollTop||SA.scrollTop||0; $("to-top").classList.toggle("on", y>320); }
+window.addEventListener("scroll", onScroll);
+SA.addEventListener("scroll", onScroll);
+function scrollTop(){ window.scrollTo({top:0,behavior:"smooth"}); SA.scrollTo && SA.scrollTo({top:0,behavior:"smooth"}); }
+
+/* Boot */
+paintClockLive(); paintMercado(); refreshSimSlider(); paintBellBadge(); paintTierChip();
+setInterval(paintClockLive,30000);
+setInterval(()=>{ const a=document.querySelector(".sc.on"); if(a&&a.id==="s-ordenes")paintClk(); },1000);
+</script>
+</body>
+</html>
