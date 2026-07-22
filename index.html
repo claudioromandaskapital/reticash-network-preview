@@ -777,7 +777,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
     <button class="modal-x" onclick="closeAll()">×</button>
     <div class="modal-t">Invitar al Network</div>
     <div class="modal-s">La invitación es a <strong>RetiCash</strong>. La persona completará onboarding + KYC. El vínculo se registra al aceptar (contrato §1.17, §3.19). No hay recompensas visibles hoy.</div>
-    <div class="form-r"><label class="form-l" for="inv-nombre">Nombre</label><input class="form-i" id="inv-nombre" type="text" placeholder="Ej. Sara Esnaurrizar"></div>
+    <div class="form-r"><label class="form-l" for="inv-nombre">Nombre</label><input class="form-i" id="inv-nombre" type="text" placeholder="Ej. Mafalda"></div>
     <div class="form-r"><label class="form-l" for="inv-mail">Correo</label><input class="form-i" id="inv-mail" type="email" placeholder="ana@example.com"></div>
     <div class="form-r"><label class="form-l" for="inv-tel">Teléfono (opcional)</label><input class="form-i" id="inv-tel" type="tel" placeholder="+52 664 000 0000"></div>
     <div class="modal-btns"><button onclick="closeAll()">Cancelar</button><button class="primary" onclick="doInvite()">Enviar invitación</button></div>
@@ -882,13 +882,13 @@ let ORD_VIVA = { id:"RC-8K3-XA7", centro_id:"c1", centro_nombre:"BorderXCash Tij
 const RISK_THRESHOLD_MIN = 30;
 
 const INVITACIONES = [
-  { id:"IV-A1", nombre:"Fernando Álvarez",   correo:"fernando.alvarez@example.com",   emitida:"2026-07-16", estado:"aceptada" },
-  { id:"IV-B2", nombre:"Sara Esnaurrizar",   correo:"sara.esnaurrizar@example.com",   emitida:"2026-07-19", estado:"abierta" },
-  { id:"IV-C3", nombre:"Rodrigo Álvarez",    correo:"rodrigo.alvarez@example.com",    emitida:"2026-07-20", estado:"enviada" }
+  { id:"IV-A1", nombre:"Harry",    correo:"harry@example.com",    emitida:"2026-07-16", estado:"aceptada" },
+  { id:"IV-B2", nombre:"Mafalda",  correo:"mafalda@example.com",  emitida:"2026-07-19", estado:"abierta" },
+  { id:"IV-C3", nombre:"Libertad", correo:"libertad@example.com", emitida:"2026-07-20", estado:"enviada" }
 ];
 const NOTIFS = [
   { id:1, p:"critical", read:false, t:"Tu Orden entra en Riesgo en 30 min", body:"RC-8K3-XA7 · vence a las 04:30. Presenta tu código en ventanilla.", meta:"hace 2 h" },
-  { id:2, p:"info",     read:false, t:"Fernando Álvarez se unió al Network",  body:"Tu invitación IV-A1 fue aceptada. El vínculo quedó registrado.",     meta:"ayer" },
+  { id:2, p:"info",     read:false, t:"Harry se unió al Network",  body:"Tu invitación IV-A1 fue aceptada. El vínculo quedó registrado.",     meta:"ayer" },
   { id:3, p:"passive",  read:true,  t:"Nuevo promedio de Referencia",         body:"La Referencia de venta se actualizó a 19.6800 esta mañana.",         meta:"ayer" }
 ];
 const SCI_RULES = [
