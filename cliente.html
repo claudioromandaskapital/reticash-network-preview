@@ -517,7 +517,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
       <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span class="rc-bell-badge" id="rc-bell-badge">2</span>
     </button>
-    <button class="who-avatar" id="who-avatar" onclick="openMini()" aria-label="Perfil">ML</button>
+    <button class="who-avatar" id="who-avatar" onclick="openMini()" aria-label="Perfil">AA</button>
     <button class="appbar-exit" onclick="simKick()" aria-label="Salir">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </button>
@@ -635,9 +635,9 @@ body.dk .inv-est.revocada{color:#fca5a5}
     <section class="sc" id="s-perfil">
 
       <div class="pf-cred">
-        <div class="pf-cred-av">ML</div>
+        <div class="pf-cred-av">AA</div>
         <div class="pf-cred-info">
-          <div class="pf-cred-n">María López</div>
+          <div class="pf-cred-n">Andrea Álvarez</div>
           <div class="pf-cred-id">CST-20260214-M78L</div>
           <div class="pf-cred-since">Cliente desde 14 feb 2026</div>
         </div>
@@ -680,7 +680,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
         <div class="pcard-r"><span class="k">KYC</span><span class="v g">Vigente</span></div>
         <div class="pcard-r"><span class="k">Custodia</span><span class="v">RetiCash</span></div>
         <div class="pcard-r"><span class="k">Documento</span><span class="v">INE · ****1234</span></div>
-        <div class="pcard-r"><span class="k">Correo</span><span class="v">maria.lopez@example.com</span></div>
+        <div class="pcard-r"><span class="k">Correo</span><span class="v">andrea.alvarez@example.com</span></div>
         <div class="pcard-r"><span class="k">Teléfono</span><span class="v">+52 664 123 4567</span></div>
         <div class="pf-nota">Tus datos y biometría los captura y custodia RetiCash. Los Centros donde operás nunca son dueños de tu identidad.</div>
       </div>
@@ -714,9 +714,9 @@ body.dk .inv-est.revocada{color:#fca5a5}
   <div class="notif-body" id="notif-body"></div>
 </div>
 <div class="mini-panel" id="mini-panel">
-  <div class="mini-n">María López</div>
+  <div class="mini-n">Andrea Álvarez</div>
   <div class="mini-r">Cliente · Network</div>
-  <div class="mini-mail">maria.lopez@example.com</div>
+  <div class="mini-mail">andrea.alvarez@example.com</div>
   <div class="mini-sep"></div>
   <button class="mini-salir" onclick="simKick()">Cerrar sesión</button>
 </div>
@@ -778,7 +778,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
     <button class="modal-x" onclick="closeAll()">×</button>
     <div class="modal-t">Invitar al Network</div>
     <div class="modal-s">La invitación es a <strong>RetiCash</strong>. La persona completará onboarding + KYC. El vínculo se registra al aceptar (contrato §1.17, §3.19). No hay recompensas visibles hoy.</div>
-    <div class="form-r"><label class="form-l" for="inv-nombre">Nombre</label><input class="form-i" id="inv-nombre" type="text" placeholder="Ej. Ana Torres"></div>
+    <div class="form-r"><label class="form-l" for="inv-nombre">Nombre</label><input class="form-i" id="inv-nombre" type="text" placeholder="Ej. Sara Esnaurrizar"></div>
     <div class="form-r"><label class="form-l" for="inv-mail">Correo</label><input class="form-i" id="inv-mail" type="email" placeholder="ana@example.com"></div>
     <div class="form-r"><label class="form-l" for="inv-tel">Teléfono (opcional)</label><input class="form-i" id="inv-tel" type="tel" placeholder="+52 664 000 0000"></div>
     <div class="modal-btns"><button onclick="closeAll()">Cancelar</button><button class="primary" onclick="doInvite()">Enviar invitación</button></div>
@@ -855,7 +855,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
 
 <script>
 /* ══════════ Datos ficticios ══════════ */
-const CLIENTE = { id:"CST-20260214-M78L", nombre:"María López", primer_nombre:"María", iniciales:"ML", email:"maria.lopez@example.com", telefono:"+52 664 123 4567", ciudad:"Tijuana", kyc_valid:true, cliente_desde:"2026-02-14" };
+const CLIENTE = { id:"CST-20260214-M78L", nombre:"Andrea Álvarez", primer_nombre:"Andrea", iniciales:"AA", email:"andrea.alvarez@example.com", telefono:"+52 664 123 4567", ciudad:"Tijuana", kyc_valid:true, cliente_desde:"2026-02-14" };
 let MEMB = { plan:"Pro", estado:"active", vence:"2026-08-14", canal_ultimo:"efectivo" };
 
 const CENTROS = [
@@ -883,13 +883,13 @@ let ORD_VIVA = { id:"RC-8K3-XA7", centro_id:"c1", centro_nombre:"BorderXCash Tij
 const RISK_THRESHOLD_MIN = 30;
 
 const INVITACIONES = [
-  { id:"IV-A1", nombre:"Ana Torres",  correo:"ana.torres@example.com", emitida:"2026-07-16", estado:"aceptada" },
-  { id:"IV-B2", nombre:"Lucas Ríos",  correo:"lucas.rios@example.com", emitida:"2026-07-19", estado:"abierta" },
-  { id:"IV-C3", nombre:"Marta Vidal", correo:"m.vidal@example.com",    emitida:"2026-07-20", estado:"enviada" }
+  { id:"IV-A1", nombre:"Fernando Álvarez",   correo:"fernando.alvarez@example.com",   emitida:"2026-07-16", estado:"aceptada" },
+  { id:"IV-B2", nombre:"Sara Esnaurrizar",   correo:"sara.esnaurrizar@example.com",   emitida:"2026-07-19", estado:"abierta" },
+  { id:"IV-C3", nombre:"Rodrigo Álvarez",    correo:"rodrigo.alvarez@example.com",    emitida:"2026-07-20", estado:"enviada" }
 ];
 const NOTIFS = [
   { id:1, p:"critical", read:false, t:"Tu Orden entra en Riesgo en 30 min", body:"RC-8K3-XA7 · vence a las 04:30. Presentá tu código en ventanilla.", meta:"hace 2 h" },
-  { id:2, p:"info",     read:false, t:"Ana Torres se unió al Network",       body:"Tu invitación IV-A1 fue aceptada. El vínculo quedó registrado.",     meta:"ayer" },
+  { id:2, p:"info",     read:false, t:"Fernando Álvarez se unió al Network",  body:"Tu invitación IV-A1 fue aceptada. El vínculo quedó registrado.",     meta:"ayer" },
   { id:3, p:"passive",  read:true,  t:"Nuevo promedio de Referencia",         body:"La Referencia de venta se actualizó a 19.6800 esta mañana.",         meta:"ayer" }
 ];
 const SCI_RULES = [
