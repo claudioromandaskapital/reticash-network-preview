@@ -268,9 +268,9 @@ body.dk .proto-banner{color:#fcd34d}
 }
 .who-avatar:hover{background:var(--surf2);color:var(--ink);border-color:var(--brd)}
 
-/* Exit icon */
+/* Exit icon (puerta) — salir explícito, estilo CM */
 .appbar-exit{
-  background:transparent;border:0;padding:8px;margin:-4px -6px -4px 4px;
+  flex-shrink:0;background:transparent;border:0;padding:8px;margin:-4px -6px -4px 2px;
   border-radius:8px;color:var(--ink3);cursor:pointer;
   transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease);
 }
@@ -299,7 +299,7 @@ body.dk .proto-banner{color:#fcd34d}
   .appbar{gap:6px}
   .role{font-size:.46rem;letter-spacing:.1em;padding:3px 5px}
   .who-avatar{width:32px;height:32px;font-size:.68rem}
-  .rc-bell svg{width:18px;height:18px}
+  .rc-bell svg,.appbar-exit svg{width:18px;height:18px}
 }
 
 /* ═════════════ SCROLL AREA + BNAV ═════════════ */
@@ -537,6 +537,10 @@ body.dk .memb-chip.expired{color:#fca5a5}
 .mini-r{font-size:.55rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin-top:4px}
 .mini-mail{font-size:.66rem;color:var(--ink3);margin-top:6px;font-weight:600}
 .mini-sep{border-top:1px solid var(--brd);margin:12px -16px 10px}
+/* El avatar abre la CUENTA (no logout). Acción neutra: ver perfil.
+   El logout vive en el ícono de puerta del header (estilo CM). */
+.mini-ver{background:var(--ink);color:var(--surf);border:0;border-radius:8px;padding:10px;font-family:inherit;font-size:.72rem;font-weight:800;letter-spacing:.02em;width:100%;cursor:pointer;transition:background var(--t-fast) var(--ease)}
+.mini-ver:hover{background:var(--red)}
 .mini-salir{background:var(--red);color:#fff;border:0;border-radius:8px;padding:9px;font-family:inherit;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;width:100%;cursor:pointer}
 
 /* ═════════════ KICK MODAL (herencia MM) ═════════════ */
