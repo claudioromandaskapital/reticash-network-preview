@@ -518,9 +518,6 @@ body.dk .inv-est.revocada{color:#fca5a5}
       <span class="rc-bell-badge" id="rc-bell-badge">2</span>
     </button>
     <button class="who-avatar" id="who-avatar" onclick="openMini()" aria-label="Perfil">AA</button>
-    <button class="appbar-exit" onclick="simKick()" aria-label="Salir">
-      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    </button>
   </header>
 
   <div class="sa">
@@ -1447,11 +1444,20 @@ $("amt").addEventListener("input",()=>paintCotizador());
 /* Toggle sentido */
 document.querySelectorAll("#q-seg button").forEach(b=>b.addEventListener("click",()=>{DIRECTION=b.dataset.dir;SEL_CENTRO_ID=null;paintMercado();}));
 /* Chrome Android teclado fix */
-/* Altura: la .app usa height:100dvh (design system) — dvh no miente en
-   iOS Safari como 100vh. Ya no hace falta el hack de innerHeight; se
-   deja un no-op por si alguna vista futura lo necesita. */
-function fixAppHeight(){}
+/* Altura del shell — robusta cross-browser.
+   El design system usa height:100dvh como base (bien en iOS/Chrome), pero
+   Firefox Android calcula dvh corto y deja aire debajo del bnav. Fijamos
+   la altura real del viewport (window.innerHeight) por JS y la refrescamos
+   con resize/orientation/visualViewport. innerHeight refleja el alto
+   visible en Firefox Android, iOS y Chrome, así que llena en los tres. */
+function fixAppHeight(){
+  const app=document.querySelector(".app");
+  if(app) app.style.height=window.innerHeight+"px";
+}
+window.addEventListener("resize",fixAppHeight);
 window.addEventListener("orientationchange",fixAppHeight);
+if(window.visualViewport) window.visualViewport.addEventListener("resize",fixAppHeight);
+fixAppHeight();
 
 /* Back-to-top — el scroll ocurre en window (la .app crece más que el viewport) */
 const SA=document.querySelector(".sa");

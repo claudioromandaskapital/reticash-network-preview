@@ -284,17 +284,19 @@ body.dk .proto-banner{color:#fcd34d}
   width:var(--tap);height:var(--tap);
 }
 
-@media (max-width:430px){
-  .appbar{gap:7px}
-  .lvl-chip-name{display:none} /* medal-only en móvil para no saturar el header */
+@media (max-width:480px){
+  /* En teléfono el header prioriza marca + nivel + campana + avatar.
+     El reloj es decorativo (mercado latiendo) y se oculta para que el
+     avatar no quede pegado/cayéndose del borde derecho. */
+  .appbar{gap:8px}
+  .lvl-chip-name{display:none} /* medal-only en móvil para no saturar */
+  .clock{display:none}
 }
-@media (max-width:400px){
+@media (max-width:360px){
   .appbar{gap:6px}
   .role{font-size:.46rem;letter-spacing:.1em;padding:3px 5px}
-  .lvl-chip{padding:2px;font-size:.5rem}
-  .lvl-chip-medal{width:18px;height:18px;font-size:.66rem}
-  .who-avatar{width:30px;height:30px;font-size:.66rem}
-  .rc-bell svg,.appbar-exit svg{width:18px;height:18px}
+  .who-avatar{width:32px;height:32px;font-size:.68rem}
+  .rc-bell svg{width:18px;height:18px}
 }
 
 /* ═════════════ SCROLL AREA + BNAV ═════════════ */
