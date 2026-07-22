@@ -44,7 +44,7 @@
    · C3 · Referido / Invitación con lista de estados. Sin recompensas.
    · Mecánica nueva (§1.4 contrato): Beneficio Potencial ESTIMADO en vivo
           contra el mejor TC vigente del mercado ciego, ROTULADO como
-          estimación (§6.3 "si estimás, decilo"). No es el evento — ese nace
+          estimación (§6.3 "si estimas, dilo"). No es el evento — ese nace
           en CreateOrder. Si el cliente elige otra oferta, recalcula.
 
   Si el vocabulario del contrato no alcanza: divergencia registrada, no
@@ -497,7 +497,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
       <button onclick="simDark()">Toggle dark</button>
     </div>
     <div class="sim-explain">
-      <b>Umbral "en Riesgo"</b> = 30 min antes del vencimiento (§6.2.13). La Orden viva vence en 60 min desde t₀; cruzá los 30 min con el slider.<br><br>
+      <b>Umbral "en Riesgo"</b> = 30 min antes del vencimiento (§6.2.13). La Orden viva vence en 60 min desde t₀; cruza los 30 min con el slider.<br><br>
       <b>Servicio SCI: caer</b> — simula el motor conductual ausente. La capa conductual del núcleo pasa a estado neutro <span class="mono">{has_data:false}</span> sin romper la UI (§5.9 contrato). El ciclo del Beneficio (Real/Perdido/veredicto) NO se afecta — es dato del núcleo, no del servicio.
     </div>
   </div>
@@ -668,7 +668,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
       <div class="pcard">
         <div class="pcard-h"><h2 class="h2">Recompensas del plan</h2></div>
         <ul class="pf-recos">
-          <li class="pf-reco"><div class="pf-reco-t">Prellamada del TC</div><div class="pf-reco-d">Recibís aviso 2 horas antes del ajuste diario del TC en cada Centro.</div></li>
+          <li class="pf-reco"><div class="pf-reco-t">Prellamada del TC</div><div class="pf-reco-d">Recibes aviso 2 horas antes del ajuste diario del TC en cada Centro.</div></li>
           <li class="pf-reco"><div class="pf-reco-t">TC Lock extendido</div><div class="pf-reco-d">Tu Orden mantiene el TC congelado hasta 8 horas (vs. 4 horas del plan base).</div></li>
           <li class="pf-reco"><div class="pf-reco-t">Historial exportable</div><div class="pf-reco-d">Reporte mensual descargable con Beneficio Real y Perdido detallados por Centro.</div></li>
         </ul>
@@ -767,7 +767,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
 <div class="ovl" id="ovl-rules">
   <div class="modal">
     <button class="modal-x" onclick="closeAll()">×</button>
-    <div class="modal-t">Cómo ganás puntos</div>
+    <div class="modal-t">Cómo ganas puntos</div>
     <div class="modal-s">Reglas del servicio SCI+conductual. Cuando el servicio no responde, la interfaz muestra estado neutro sin romper (contrato §5.9).</div>
     <ul class="rules-list" id="rules-list"></ul>
   </div>
@@ -893,7 +893,7 @@ const NOTIFS = [
   { id:3, p:"passive",  read:true,  t:"Nuevo promedio de Referencia",         body:"La Referencia de venta se actualizó a 19.6800 esta mañana.",         meta:"ayer" }
 ];
 const SCI_RULES = [
-  { pts:+80, t:"Ejecutar Orden a tiempo",     d:"Ejecutá tu Orden dentro del TC congelado — antes del vencimiento." },
+  { pts:+80, t:"Ejecutar Orden a tiempo",     d:"Ejecuta tu Orden dentro del TC congelado — antes del vencimiento." },
   { pts:+40, t:"Cerrar la semana operando",   d:"Cierras la semana con al menos una Orden ejecutada." },
   { pts:+20, t:"Invitación aceptada",         d:"Cuando alguien que invitaste completa su KYC en el Network." },
   { pts:-30, t:"Vencimiento por no_show",      d:"No te presentaste en ventanilla. La Orden pasó a no_show." },
@@ -962,7 +962,7 @@ function paintMembGate(){
     return;
   }
   if(MEMB.estado==="anon" || MEMB.estado==="expired"){
-    const t = MEMB.estado==="expired" ? "Tu Membresía venció" : "Necesitás una Membresía para operar";
+    const t = MEMB.estado==="expired" ? "Tu Membresía venció" : "Necesitas una Membresía para operar";
     w.innerHTML='<div class="mgate req"><div class="mgate-ey">Membresía requerida</div><div class="mgate-t">'+t+'</div><div class="mgate-s">La Membresía es tu acceso al marketplace del Network. Se paga a <strong>RetiCash</strong>, nunca al Centro.</div><button class="mgate-btn" onclick="openActivar()">Activar Membresía</button></div>';
     return;
   }
@@ -1254,7 +1254,7 @@ function paintOrdViva(){
       '<div class="qr-code">'+ORD_VIVA.id+'</div>'+
       '<div class="qr-sub">Presenta este código en ventanilla</div>'+
       '<div class="qr-data kv-grid">'+
-        '<div class="kv-cell"><div class="kv-l">'+(ORD_VIVA.sentido==="sell"?"Vendés":"Comprás")+'</div><div class="kv-v">'+fmtUSD(ORD_VIVA.monto)+'</div></div>'+
+        '<div class="kv-cell"><div class="kv-l">'+(ORD_VIVA.sentido==="sell"?"Vendes":"Compras")+'</div><div class="kv-v">'+fmtUSD(ORD_VIVA.monto)+'</div></div>'+
         '<div class="kv-cell"><div class="kv-l">TC congelado</div><div class="kv-v">'+ORD_VIVA.tc_congelado.toFixed(2)+'</div></div>'+
         '<div class="kv-cell"><div class="kv-l">Referencia congelada</div><div class="kv-v">'+ORD_VIVA.ref_congelada.toFixed(4)+'</div></div>'+
         '<div class="kv-cell"><div class="kv-l">'+(inRisk?"En Riesgo":"Beneficio Potencial")+'</div><div class="kv-v '+(inRisk?"a":"g")+'">'+fmtMoney(benef)+'</div></div>'+
@@ -1300,7 +1300,7 @@ function paintPerdido(){
     else if(o.estado==="partial"){ per+=bpd*(o.monto-o.paid); n++; }
   });
   if(per<=0){ w.innerHTML=""; return; }
-  w.innerHTML = '<div class="perdido-banner"><div class="perdido-banner-ic">▼</div><div class="perdido-banner-txt">Este mes dejaste de ganar <strong>'+fmtMoney(per)+'</strong> en '+n+' orden'+(n===1?'':'es')+' no ejecutada'+(n===1?'':'s')+' o incompleta'+(n===1?'':'s')+'. Ejecutá siempre lo que registras para no volver a perderlo.</div></div>';
+  w.innerHTML = '<div class="perdido-banner"><div class="perdido-banner-ic">▼</div><div class="perdido-banner-txt">Este mes dejaste de ganar <strong>'+fmtMoney(per)+'</strong> en '+n+' orden'+(n===1?'':'es')+' no ejecutada'+(n===1?'':'s')+' o incompleta'+(n===1?'':'s')+'. Ejecuta siempre lo que registras para no volver a perderlo.</div></div>';
 }
 
 function paintVeredicto(){

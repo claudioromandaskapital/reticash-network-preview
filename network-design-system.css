@@ -69,7 +69,7 @@
   --r-btn-sm:8px;
 
   /* ── Responsividad por audiencia (CLAUDE.md §8) ──
-     Breakpoints y anchos máximos por tipo de vista viven ACÁ, no ad-hoc
+     Breakpoints y anchos máximos por tipo de vista viven AQUÍ, no ad-hoc
      por interfaz. El cliente es una app de teléfono (ancho tipo app,
      centrada en desktop). Los roles operativos usan `--work-max` como
      superficie de trabajo (scaffold: ver `.app--work`). */
