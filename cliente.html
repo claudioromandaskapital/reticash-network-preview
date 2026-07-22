@@ -16,7 +16,7 @@
 
   1 · CONTRATO ontológico (contratos/nucleo_membresia_caja.md) — LA ONTOLOGÍA.
       Innegociable. Vocabulario, objetos, acciones, estados. Toda categoría
-      visible acá sale del contrato.
+      visible aquí sale del contrato.
 
   2 · MM (customer.html + app.css) — EL FLUJO.
       Esqueleto de pantallas y mecánica probada en operación real: appbar,
@@ -30,7 +30,7 @@
       Destilado en el asset propio del repo → network-design-system.css
       (linkeado abajo): tokens, componentes, bottom sheets, estados,
       transiciones, dark mode, tipografía, animaciones. Esta interfaz se
-      construye SOBRE ese sistema; acá abajo solo va el CSS específico de
+      construye SOBRE ese sistema; aquí abajo solo va el CSS específico de
       las piezas del cliente (cotizador, tablero ciego, orden viva,
       veredicto, bloque conductual, referidos).
 
@@ -539,7 +539,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
       <!-- MI CARD OPERAR con estimación -->
       <div class="op-hero sell" id="op-hero">
         <div class="op-hero-ey" id="op-hero-ey">Operar</div>
-        <h2 class="op-hero-t">Registrá tu Orden</h2>
+        <h2 class="op-hero-t">Registra tu Orden</h2>
 
         <div class="q-seg" id="q-seg">
           <button data-dir="sell" class="on">Vendo USD</button>
@@ -581,7 +581,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
         <div class="blind-h-s" id="blind-count">—</div>
       </div>
       <div class="blind-list" id="blind-list"></div>
-      <div class="blind-nota"><strong>El nombre del Centro no se muestra acá.</strong> Solo ves TC, Capacidad y zona. La identidad se revela cuando registrás tu Orden (contrato §1.7.1). Tocá una oferta para estimar con su TC.</div>
+      <div class="blind-nota"><strong>El nombre del Centro no se muestra aquí.</strong> Solo ves TC, Capacidad y zona. La identidad se revela cuando registras tu Orden (contrato §1.7.1). Toca una oferta para estimar con su TC.</div>
 
       <!-- BLOQUE CONDUCTUAL (distribución MM: en Mercado) -->
       <div id="beh-mercado"></div>
@@ -652,7 +652,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
           <h2 class="ref-block-t">Invitar al Network</h2>
           <button class="ref-invite" onclick="openInvite()">Invitar</button>
         </div>
-        <div class="ref-sub">Invitá a alguien a unirse al Network. El alta se habilita con la vigencia del KYC de RetiCash — sin aprobaciones manuales.</div>
+        <div class="ref-sub">Invita a alguien a unirse al Network. El alta se habilita con la vigencia del KYC de RetiCash — sin aprobaciones manuales.</div>
         <div class="inv-list" id="inv-list"></div>
         <div class="ref-nota">Las invitaciones registran el vínculo emisor→receptor como un hecho en la cadena de eventos, independiente de recompensas.</div>
       </div>
@@ -682,7 +682,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
         <div class="pcard-r"><span class="k">Documento</span><span class="v">INE · ****1234</span></div>
         <div class="pcard-r"><span class="k">Correo</span><span class="v">andrea.alvarez@example.com</span></div>
         <div class="pcard-r"><span class="k">Teléfono</span><span class="v">+52 664 123 4567</span></div>
-        <div class="pf-nota">Tus datos y biometría los captura y custodia RetiCash. Los Centros donde operás nunca son dueños de tu identidad.</div>
+        <div class="pf-nota">Tus datos y biometría los captura y custodia RetiCash. Los Centros donde operas nunca son dueños de tu identidad.</div>
       </div>
 
       <div class="pcard">
@@ -725,8 +725,8 @@ body.dk .inv-est.revocada{color:#fca5a5}
 <div class="ovl" id="ovl-confirm">
   <div class="modal">
     <button class="modal-x" onclick="closeAll()">×</button>
-    <div class="modal-t">Confirmá tu Orden</div>
-    <div class="modal-s">Al confirmar se congelan el TC, la Referencia y el sentido — y el Beneficio Potencial deja de ser estimación para volverse hecho registrado. <strong>Acá se te revela el Centro y la sucursal.</strong></div>
+    <div class="modal-t">Confirma tu Orden</div>
+    <div class="modal-s">Al confirmar se congelan el TC, la Referencia y el sentido — y el Beneficio Potencial deja de ser estimación para volverse hecho registrado. <strong>Aquí se te revela el Centro y la sucursal.</strong></div>
     <div class="kv-grid">
       <div class="kv-cell"><div class="kv-l">Sentido</div><div class="kv-v" id="cf-sent">—</div></div>
       <div class="kv-cell"><div class="kv-l">Monto</div><div class="kv-v" id="cf-monto">—</div></div>
@@ -742,7 +742,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
 <div class="ovl" id="ovl-liveorder">
   <div class="modal">
     <button class="modal-x" onclick="closeAll()">×</button>
-    <div class="modal-t">Ya tenés una Orden viva</div>
+    <div class="modal-t">Ya tienes una Orden viva</div>
     <div class="modal-s" id="lo-sub">Solo puede haber una Orden viva por Cliente (contrato §6.2).</div>
     <div class="modal-btns stack">
       <button class="primary" onclick="liveOrderResolve('cancel')">Cancelar la anterior y registrar la nueva</button>
@@ -790,8 +790,8 @@ body.dk .inv-est.revocada{color:#fca5a5}
 <div class="ovl" id="ovl-activar">
   <div class="modal">
     <button class="modal-x" onclick="closeAll()">×</button>
-    <div class="modal-t">Activá tu Membresía Pro</div>
-    <div class="modal-s">La Membresía es tu acceso al marketplace. Elegí cómo pagarla — cada canal es un recorrido distinto.</div>
+    <div class="modal-t">Activa tu Membresía Pro</div>
+    <div class="modal-s">La Membresía es tu acceso al marketplace. Elige cómo pagarla — cada canal es un recorrido distinto.</div>
     <div class="act-benef">
       <div class="act-benef-r"><span class="k">Plan</span><span class="v">Pro</span></div>
       <div class="act-benef-r"><span class="k">Precio</span><span class="v">$12 USD / mes</span></div>
@@ -799,11 +799,11 @@ body.dk .inv-est.revocada{color:#fca5a5}
     </div>
     <div class="chan-card efectivo" onclick="openActivarEfectivo()">
       <div class="chan-card-h"><div class="chan-ic">🏦</div><div class="chan-t">En ventanilla · efectivo</div><span class="chan-tag def">habitual</span></div>
-      <div class="chan-d">Andá a un Centro RetiCash y el Cajero cobra en efectivo. Tu Membresía se activa en el momento del cobro.</div>
+      <div class="chan-d">Ve a un Centro RetiCash y el Cajero cobra en efectivo. Tu Membresía se activa en el momento del cobro.</div>
     </div>
     <div class="chan-card digital" onclick="openActivarDigital()">
       <div class="chan-card-h"><div class="chan-ic">📲</div><div class="chan-t">Desde la app · SPEI o CoDi</div></div>
-      <div class="chan-d">Transferí a RetiCash desde tu banco. Tu Membresía queda esperando hasta que RetiCash confirme el ingreso.</div>
+      <div class="chan-d">Transfiere a RetiCash desde tu banco. Tu Membresía queda esperando hasta que RetiCash confirme el ingreso.</div>
     </div>
     <div class="chan-guard"><strong>La Membresía es de RetiCash en todos los canales.</strong> El Cajero cobra en su nombre — nunca es dueño de tu Membresía.</div>
   </div>
@@ -816,8 +816,8 @@ body.dk .inv-est.revocada{color:#fca5a5}
     <div class="modal-t">Activación en ventanilla</div>
     <div class="modal-s">Iniciaste la activación en efectivo. El cobro y la activación se completan <strong>presencialmente</strong> en un Centro RetiCash.</div>
     <ol class="act-steps">
-      <li class="act-step">Andá a cualquier Centro RetiCash en TJ.</li>
-      <li class="act-step">Mostrá este código en ventanilla.</li>
+      <li class="act-step">Ve a cualquier Centro RetiCash en TJ.</li>
+      <li class="act-step">Muestra este código en ventanilla.</li>
       <li class="act-step">El Cajero cobra <strong>$12 USD en efectivo</strong> y tu Membresía Pro se activa en el momento.</li>
     </ol>
     <div class="act-code" id="ef-code">RC-MEM-0000</div>
@@ -831,7 +831,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
   <div class="modal">
     <button class="modal-x" onclick="closeAll()">×</button>
     <div class="modal-t">Activación desde la app</div>
-    <div class="modal-s">Transferí a <strong>RetiCash</strong> desde tu banco. Elegí el medio.</div>
+    <div class="modal-s">Transfiere a <strong>RetiCash</strong> desde tu banco. Elige el medio.</div>
     <div class="q-seg" id="dig-seg" style="margin-bottom:14px">
       <button data-dig="spei" class="on" onclick="pickDig('spei')">SPEI</button>
       <button data-dig="codi" onclick="pickDig('codi')">CoDi</button>
@@ -843,7 +843,7 @@ body.dk .inv-est.revocada{color:#fca5a5}
       <div class="act-benef-r"><span class="k">Concepto</span><span class="v">MEMB-CST-M78L</span></div>
     </div>
     <div class="chan-guard">El beneficiario es <strong>RetiCash</strong>, nunca el Centro. Tu Membresía queda en <strong>esperando confirmación</strong> hasta que RetiCash valide el ingreso.</div>
-    <div class="modal-btns"><button onclick="closeAll()">Cancelar</button><button class="primary" onclick="confirmDigital()">Ya transferí</button></div>
+    <div class="modal-btns"><button onclick="closeAll()">Cancelar</button><button class="primary" onclick="confirmDigital()">Ya transfiere</button></div>
   </div>
 </div>
 
@@ -888,13 +888,13 @@ const INVITACIONES = [
   { id:"IV-C3", nombre:"Rodrigo Álvarez",    correo:"rodrigo.alvarez@example.com",    emitida:"2026-07-20", estado:"enviada" }
 ];
 const NOTIFS = [
-  { id:1, p:"critical", read:false, t:"Tu Orden entra en Riesgo en 30 min", body:"RC-8K3-XA7 · vence a las 04:30. Presentá tu código en ventanilla.", meta:"hace 2 h" },
+  { id:1, p:"critical", read:false, t:"Tu Orden entra en Riesgo en 30 min", body:"RC-8K3-XA7 · vence a las 04:30. Presenta tu código en ventanilla.", meta:"hace 2 h" },
   { id:2, p:"info",     read:false, t:"Fernando Álvarez se unió al Network",  body:"Tu invitación IV-A1 fue aceptada. El vínculo quedó registrado.",     meta:"ayer" },
   { id:3, p:"passive",  read:true,  t:"Nuevo promedio de Referencia",         body:"La Referencia de venta se actualizó a 19.6800 esta mañana.",         meta:"ayer" }
 ];
 const SCI_RULES = [
   { pts:+80, t:"Ejecutar Orden a tiempo",     d:"Ejecutá tu Orden dentro del TC congelado — antes del vencimiento." },
-  { pts:+40, t:"Cerrar la semana operando",   d:"Cerrás la semana con al menos una Orden ejecutada." },
+  { pts:+40, t:"Cerrar la semana operando",   d:"Cierras la semana con al menos una Orden ejecutada." },
   { pts:+20, t:"Invitación aceptada",         d:"Cuando alguien que invitaste completa su KYC en el Network." },
   { pts:-30, t:"Vencimiento por no_show",      d:"No te presentaste en ventanilla. La Orden pasó a no_show." },
   { pts:-15, t:"Cancelación con anticipación", d:"Cancelaste una Orden antes de ejecutar." }
@@ -950,7 +950,7 @@ function canOperate(){ return MEMB.estado==="active" || MEMB.estado==="grace"; }
 function paintMembGate(){
   const w=$("memb-gate");
   if(INTENTO_EFECTIVO && MEMB.estado!=="active"){
-    w.innerHTML='<div class="mgate wait-cash"><div class="mgate-ey">Esperando activación en ventanilla</div><div class="mgate-t">Andá a ventanilla con tu código</div><div class="mgate-s">Mostrá <strong>'+INTENTO_EFECTIVO.code+'</strong> en cualquier Centro RetiCash. El Cajero cobra $12 USD en efectivo y tu Membresía se activa en el momento. <strong>El Cajero cobra en nombre de RetiCash.</strong></div><div class="mgate-code">'+INTENTO_EFECTIVO.code+'</div></div>';
+    w.innerHTML='<div class="mgate wait-cash"><div class="mgate-ey">Esperando activación en ventanilla</div><div class="mgate-t">Ve a ventanilla con tu código</div><div class="mgate-s">Muestra <strong>'+INTENTO_EFECTIVO.code+'</strong> en cualquier Centro RetiCash. El Cajero cobra $12 USD en efectivo y tu Membresía se activa en el momento. <strong>El Cajero cobra en nombre de RetiCash.</strong></div><div class="mgate-code">'+INTENTO_EFECTIVO.code+'</div></div>';
     return;
   }
   if(MEMB.estado==="pending_activation"){
@@ -958,7 +958,7 @@ function paintMembGate(){
     return;
   }
   if(MEMB.estado==="grace"){
-    w.innerHTML='<div class="mgate grace"><div class="mgate-ey">Membresía en gracia</div><div class="mgate-t">Renová para no perder el acceso</div><div class="mgate-s">Tu Membresía venció pero seguís operando en la ventana de gracia. Renovala antes de que se cierre.</div><button class="mgate-btn" onclick="openActivar()">Renovar Membresía</button></div>';
+    w.innerHTML='<div class="mgate grace"><div class="mgate-ey">Membresía en gracia</div><div class="mgate-t">Renueva para no perder el acceso</div><div class="mgate-s">Tu Membresía venció pero sigues operando en la ventana de gracia. Renovala antes de que se cierre.</div><button class="mgate-btn" onclick="openActivar()">Renovar Membresía</button></div>';
     return;
   }
   if(MEMB.estado==="anon" || MEMB.estado==="expired"){
@@ -979,7 +979,7 @@ function openActivarEfectivo(){
 function confirmEfectivo(){
   INTENTO_EFECTIVO = { code: $("ef-code").textContent };
   closeAll();
-  toast("Activación iniciada · andá a ventanilla con tu código","");
+  toast("Activación iniciada · ve a ventanilla con tu código","");
   paintMercado();
 }
 function openActivarDigital(){ closeAll(true); pickDig("spei"); $("ovl-digital").classList.add("on"); }
@@ -1067,7 +1067,7 @@ function paintCotizador(){
     btn.onclick = openConfirm;
   } else {
     btn.classList.add("side-neutro");
-    btn.textContent = "Activá tu Membresía para operar";
+    btn.textContent = "Activa tu Membresía para operar";
     btn.onclick = openActivar;
   }
 
@@ -1129,7 +1129,7 @@ function behRachaGridHTML(b){
     '<div class="beh-w-foot">Mejor racha: <strong>'+b.mejor_racha+' semanas</strong> · Esta semana: <strong>operada</strong></div>';
 }
 function behNudgeHTML(b){
-  return '<div class="beh-nudge"><div class="beh-nudge-ey">Oportunidad de la semana</div><div class="beh-nudge-v">+'+fmtMoney(b.nudge.potential)+'</div><div class="beh-nudge-txt">de <strong>Beneficio Potencial</strong> si cerrás <strong>'+b.nudge.ops_remaining+' operaciones más</strong> esta semana con el flujo típico de tu cuenta.</div></div>';
+  return '<div class="beh-nudge"><div class="beh-nudge-ey">Oportunidad de la semana</div><div class="beh-nudge-v">+'+fmtMoney(b.nudge.potential)+'</div><div class="beh-nudge-txt">de <strong>Beneficio Potencial</strong> si cierras <strong>'+b.nudge.ops_remaining+' operaciones más</strong> esta semana con el flujo típico de tu cuenta.</div></div>';
 }
 
 /* Beneficio del mes (NÚCLEO — ciclo del Beneficio ya modelado, siempre
@@ -1152,8 +1152,8 @@ function bvdCardHTML(){
   const max=Math.max(1,cap,dej);
   const capW=Math.round(cap/max*100), dejW=Math.round(dej/max*100);
   const foot = dej>0
-    ? 'Cada Orden que ejecutás a tiempo pasa de <strong>Dejado ir</strong> a <strong>Capturado</strong>.'
-    : 'No dejaste ir Beneficio este mes. Seguí operando para sostenerlo.';
+    ? 'Cada Orden que ejecutas a tiempo pasa de <strong>Dejado ir</strong> a <strong>Capturado</strong>.'
+    : 'No dejaste ir Beneficio este mes. Sigue operando para sostenerlo.';
   return '<div class="beh">' +
     '<div class="beh-title">Tu Beneficio este mes</div>' +
     '<div class="bvd">' +
@@ -1198,11 +1198,11 @@ function openConfirm(){
   const tc = DIRECTION==="sell" ? c.tc_venta : c.tc_compra;
   const ref = DIRECTION==="sell" ? REF.venta : REF.compra;
   const monto = parseAmt($("amt").value);
-  if(monto<=0){ toast("Ingresá un monto en USD","err"); return; }
+  if(monto<=0){ toast("Ingresa un monto en USD","err"); return; }
   if(ORD_VIVA && (ORD_VIVA.estado==="pending"||ORD_VIVA.estado==="partial")){
     const merge = ORD_VIVA.sentido===DIRECTION;
     $("lo-merge").disabled=!merge; $("lo-merge").style.opacity=merge?"":".4";
-    $("lo-sub").innerHTML = 'Ya tenés una Orden <strong>'+ORD_VIVA.estado+'</strong> ('+ORD_VIVA.id+'): '+fmtUSD(ORD_VIVA.monto)+' a '+ORD_VIVA.tc_congelado.toFixed(2)+' en <strong>'+ORD_VIVA.centro_nombre+'</strong>. Solo puede haber una Orden viva por Cliente (contrato §6.2).'+(merge?'':'<br><br><em>Sumar no se ofrece: tu Orden viva es en sentido opuesto.</em>');
+    $("lo-sub").innerHTML = 'Ya tienes una Orden <strong>'+ORD_VIVA.estado+'</strong> ('+ORD_VIVA.id+'): '+fmtUSD(ORD_VIVA.monto)+' a '+ORD_VIVA.tc_congelado.toFixed(2)+' en <strong>'+ORD_VIVA.centro_nombre+'</strong>. Solo puede haber una Orden viva por Cliente (contrato §6.2).'+(merge?'':'<br><br><em>Sumar no se ofrece: tu Orden viva es en sentido opuesto.</em>');
     $("ovl-liveorder").classList.add("on"); return;
   }
   const bpd=beneficioPorUSD(DIRECTION,tc,ref); const benef=bpd*monto;
@@ -1222,7 +1222,7 @@ function doCreateOrder(){
   const vig = MEMB.plan==="Pro" ? 8 : 4;
   ORD_VIVA = { id:"RC-"+Math.floor(Math.random()*900+100)+"-"+String.fromCharCode(65+Math.floor(Math.random()*26))+Math.floor(Math.random()*99).toString().padStart(2,"0"), centro_id:c.id, centro_nombre:c.nombre, sucursal:c.sucursal, sentido:DIRECTION, monto, tc_congelado:tc, ref_congelada:ref, creada_ms:now(), exp_ts:now()+vig*3600*1000, estado:"pending", paid:0 };
   SIM_MIN=0; $("sim-now").value=0; refreshSimSlider();
-  closeAll(); toast("Orden registrada · presentá tu código en ventanilla","ok"); tab("ordenes");
+  closeAll(); toast("Orden registrada · presenta tu código en ventanilla","ok"); tab("ordenes");
 }
 function liveOrderResolve(a){
   const mn=parseAmt($("amt").value);
@@ -1236,7 +1236,7 @@ function paintOrdenes(){ paintOrdViva(); paintClk(); paintPerdido(); paintVeredi
 function paintOrdViva(){
   const w=$("ord-live-wrap");
   if(!ORD_VIVA || (ORD_VIVA.estado!=="pending"&&ORD_VIVA.estado!=="partial")){
-    w.innerHTML='<div class="empty-live"><div class="empty-live-t">Sin Órdenes vivas</div><div class="empty-live-s">Registrá una desde el Mercado.</div><button class="empty-live-btn" onclick="tab(\'mercado\')">Ir al Mercado</button></div>';
+    w.innerHTML='<div class="empty-live"><div class="empty-live-t">Sin Órdenes vivas</div><div class="empty-live-s">Registra una desde el Mercado.</div><button class="empty-live-btn" onclick="tab(\'mercado\')">Ir al Mercado</button></div>';
     return;
   }
   const secsLeft=Math.max(0,Math.round((ORD_VIVA.exp_ts-now())/1000));
@@ -1247,12 +1247,12 @@ function paintOrdViva(){
   const sinPagar=Math.max(0,ORD_VIVA.monto-(ORD_VIVA.paid||0));
   const benef=bpd*sinPagar;
   const tag=expired?'<div class="qr-tag expired"><span class="qr-pulse"></span>Vencida</div>':(inRisk?'<div class="qr-tag risk"><span class="qr-pulse"></span>Beneficio en Riesgo</div>':'<div class="qr-tag"><span class="qr-pulse"></span>Orden lista para ejecutar</div>');
-  const risk=inRisk&&!expired?'<div class="risk-banner"><div class="risk-banner-ic">⏱</div><div class="risk-banner-txt">Tu Orden entró en el umbral de <strong>'+RISK_THRESHOLD_MIN+' minutos</strong> al vencimiento. Tu Beneficio Potencial de '+fmtMoney(benef)+' está <strong>en Riesgo</strong> — presentá tu código en ventanilla ahora.</div></div>':"";
+  const risk=inRisk&&!expired?'<div class="risk-banner"><div class="risk-banner-ic">⏱</div><div class="risk-banner-txt">Tu Orden entró en el umbral de <strong>'+RISK_THRESHOLD_MIN+' minutos</strong> al vencimiento. Tu Beneficio Potencial de '+fmtMoney(benef)+' está <strong>en Riesgo</strong> — presenta tu código en ventanilla ahora.</div></div>':"";
   w.innerHTML = risk +
     '<div class="qr-card">'+tag+
       '<div class="qr-img">'+qrSVG(ORD_VIVA.id)+'</div>'+
       '<div class="qr-code">'+ORD_VIVA.id+'</div>'+
-      '<div class="qr-sub">Presentá este código en ventanilla</div>'+
+      '<div class="qr-sub">Presenta este código en ventanilla</div>'+
       '<div class="qr-data kv-grid">'+
         '<div class="kv-cell"><div class="kv-l">'+(ORD_VIVA.sentido==="sell"?"Vendés":"Comprás")+'</div><div class="kv-v">'+fmtUSD(ORD_VIVA.monto)+'</div></div>'+
         '<div class="kv-cell"><div class="kv-l">TC congelado</div><div class="kv-v">'+ORD_VIVA.tc_congelado.toFixed(2)+'</div></div>'+
@@ -1279,13 +1279,13 @@ function paintClk(){
     const s=Math.max(0,Math.round((ORD_VIVA.exp_ts-now())/1000));
     clk.classList.remove("no-live"); $("clk-ey").textContent="Tiempo para ejecutar tu Orden";
     $("clk-time").textContent=fmtHMS(s); $("clk-time").classList.toggle("warn",s<=RISK_THRESHOLD_MIN*60);
-    $("clk-msg").textContent="Presentá tu código en ventanilla antes del vencimiento.";
+    $("clk-msg").textContent="Presenta tu código en ventanilla antes del vencimiento.";
   } else {
     const last=HISTORIAL.filter(o=>o.estado==="completed"||o.estado==="partial").map(o=>new Date(o.fecha).getTime()).sort((a,b)=>b-a)[0];
     clk.classList.add("no-live"); $("clk-ey").textContent="Tiempo sin operar";
     if(last){ const diff=Math.max(0,now()-last); const s=Math.floor(diff/1000),d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60); $("clk-time").textContent=(d>0?d+" días ":"")+h+":"+String(m).padStart(2,"0"); }
     else $("clk-time").textContent="—";
-    $("clk-time").classList.remove("warn"); $("clk-msg").textContent="Registrá una Orden desde el Mercado cuando quieras.";
+    $("clk-time").classList.remove("warn"); $("clk-msg").textContent="Registra una Orden desde el Mercado cuando quieras.";
   }
 }
 
@@ -1300,7 +1300,7 @@ function paintPerdido(){
     else if(o.estado==="partial"){ per+=bpd*(o.monto-o.paid); n++; }
   });
   if(per<=0){ w.innerHTML=""; return; }
-  w.innerHTML = '<div class="perdido-banner"><div class="perdido-banner-ic">▼</div><div class="perdido-banner-txt">Este mes dejaste de ganar <strong>'+fmtMoney(per)+'</strong> en '+n+' orden'+(n===1?'':'es')+' no ejecutada'+(n===1?'':'s')+' o incompleta'+(n===1?'':'s')+'. Ejecutá siempre lo que registrás para no volver a perderlo.</div></div>';
+  w.innerHTML = '<div class="perdido-banner"><div class="perdido-banner-ic">▼</div><div class="perdido-banner-txt">Este mes dejaste de ganar <strong>'+fmtMoney(per)+'</strong> en '+n+' orden'+(n===1?'':'es')+' no ejecutada'+(n===1?'':'s')+' o incompleta'+(n===1?'':'s')+'. Ejecutá siempre lo que registras para no volver a perderlo.</div></div>';
 }
 
 function paintVeredicto(){
